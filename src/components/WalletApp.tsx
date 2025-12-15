@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/lib/AuthContext';
@@ -13,15 +13,24 @@ import ActivityList from './ActivityList';
 import WorldIDVerify from './WorldIDVerify';
 import ProfileCard from './ProfileCard';
 import EmailLinkingStep from './EmailLinkingStep';
-import TokenDetailModal from './modals/TokenDetailModal';
-import SendModal from './modals/SendModal';
-import ReceiveModal from './modals/ReceiveModal';
-import BuyModal from './modals/BuyModal';
 import SocialLinks from './SocialLinks';
-import SettingsModal from './modals/SettingsModal';
 import { AnimatedButton, FadeIn } from './ui/Motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { useI18n } from '@/lib/i18n';
+
+// Lazy load heavy modals (reduces initial bundle by ~100KB)
+const TokenDetailModal = lazy(() => import('./modals/TokenDetailModal'));
+const SendModal = lazy(() => import('./modals/SendModal'));
+const ReceiveModal = lazy(() => import('./modals/ReceiveModal'));
+const BuyModal = lazy(() => import('./modals/BuyModal'));
+const SettingsModal = lazy(() => import('./modals/SettingsModal'));
+
+// Loading fallback for modals
+const ModalLoader = () => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+        <div className="w-8 h-8 border-2 border-pink-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+);
 
 const WORLD_APP_DEEP_LINK = 'https://worldcoin.org/mini-app?app_id=app_920c1c9a0cb3aaa68e626f54c09f3cf9';
 
@@ -268,46 +277,57 @@ export default function WalletApp() {
             <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
 
             {/* Modals */}
-            {selectedToken && (
-                <TokenDetailModal
-                    tokenBalance={selectedToken}
-                    isOpen={true}
-                    onClose={() => setSelectedToken(null)}
-                    onSend={() => {
-                        setSendWithToken(selectedToken);
-                        setSelectedToken(null);
-                        setShowSendModal(true);
-                    }}
-                    onBuy={() => { setSelectedToken(null); setShowBuyModal(true); }}
-                />
-            )}
+            {/* Lazy-loaded modals with Suspense */}
+            <Suspense fallback={<ModalLoader />}>
+                {selectedToken && (
+                    <TokenDetailModal
+                        tokenBalance={selectedToken}
+                        isOpen={true}
+                        onClose={() => setSelectedToken(null)}
+                        onSend={() => {
+                            setSendWithToken(selectedToken);
+                            setSelectedToken(null);
+                            setShowSendModal(true);
+                        }}
+                        onBuy={() => { setSelectedToken(null); setShowBuyModal(true); }}
+                    />
+                )}
 
-            <SendModal
-                isOpen={showSendModal}
-                onClose={() => {
-                    setShowSendModal(false);
-                    setSendWithToken(null);
-                }}
-                walletAddress={walletAddress!}
-                balances={balances}
-                initialToken={sendWithToken}
-            />
+                {showSendModal && (
+                    <SendModal
+                        isOpen={showSendModal}
+                        onClose={() => {
+                            setShowSendModal(false);
+                            setSendWithToken(null);
+                        }}
+                        walletAddress={walletAddress!}
+                        balances={balances}
+                        initialToken={sendWithToken}
+                    />
+                )}
 
-            <ReceiveModal
-                isOpen={showReceiveModal}
-                onClose={() => setShowReceiveModal(false)}
-                walletAddress={walletAddress!}
-            />
+                {showReceiveModal && (
+                    <ReceiveModal
+                        isOpen={showReceiveModal}
+                        onClose={() => setShowReceiveModal(false)}
+                        walletAddress={walletAddress!}
+                    />
+                )}
 
-            <BuyModal
-                isOpen={showBuyModal}
-                onClose={() => setShowBuyModal(false)}
-            />
+                {showBuyModal && (
+                    <BuyModal
+                        isOpen={showBuyModal}
+                        onClose={() => setShowBuyModal(false)}
+                    />
+                )}
 
-            <SettingsModal
-                isOpen={showSettingsModal}
-                onClose={() => setShowSettingsModal(false)}
-            />
+                {showSettingsModal && (
+                    <SettingsModal
+                        isOpen={showSettingsModal}
+                        onClose={() => setShowSettingsModal(false)}
+                    />
+                )}
+            </Suspense>
         </div>
     );
 }
