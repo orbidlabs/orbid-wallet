@@ -89,32 +89,32 @@ export function useTokenMarketData(symbol: string, period: ChartPeriod = '30d') 
                 // 365d: ~365 points (1 day intervals)
                 // max: varies by coin age
 
-                // Target points per period:
-                // 1d: 24 points (1 per hour)
-                // 7d: 28 points (4 per day)
-                // 30d: 30 points (1 per day)
-                // 365d: 52 points (1 per week)
-                // max: 60 points (dynamic)
+                // Target points per period for better visualization:
+                // 1d: 48 points (30 min intervals) - shows hourly trends
+                // 7d: 56 points (~3 hour intervals) - shows daily patterns
+                // 30d: 60 points (~12 hour intervals) - shows daily changes
+                // 365d: 73 points (~5 day intervals) - shows weekly trends
+                // max: 120 points (dynamic) - shows full history
 
                 let targetPoints: number;
                 switch (period) {
                     case '1d':
-                        targetPoints = 24; // hourly
+                        targetPoints = 48; // 30 min intervals
                         break;
                     case '7d':
-                        targetPoints = 28; // 4 per day
+                        targetPoints = 56; // ~3 hour intervals
                         break;
                     case '30d':
-                        targetPoints = 30; // daily
+                        targetPoints = 60; // ~12 hour intervals
                         break;
                     case '365d':
-                        targetPoints = 52; // weekly
+                        targetPoints = 73; // ~5 day intervals
                         break;
                     case 'max':
-                        targetPoints = 60; // dynamic
+                        targetPoints = 120; // full history
                         break;
                     default:
-                        targetPoints = 30;
+                        targetPoints = 60;
                 }
 
                 const sampleRate = Math.max(1, Math.floor(prices.length / targetPoints));
