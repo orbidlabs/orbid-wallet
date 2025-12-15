@@ -82,54 +82,21 @@ export function useTokenMarketData(symbol: string, period: ChartPeriod = '30d') 
                 const prices = chartData.prices || [];
                 const volumes = chartData.total_volumes || [];
 
-                // CoinGecko returns:
+                // Use CoinGecko native intervals without sampling:
                 // 1d: ~288 points (5 min intervals)
                 // 7d: ~672 points (~15 min intervals)
                 // 30d: ~720 points (1 hour intervals)
                 // 365d: ~365 points (1 day intervals)
                 // max: varies by coin age
 
-                // Target points per period for better visualization:
-                // 1d: 48 points (30 min intervals) - shows hourly trends
-                // 7d: 56 points (~3 hour intervals) - shows daily patterns
-                // 30d: 60 points (~12 hour intervals) - shows daily changes
-                // 365d: 73 points (~5 day intervals) - shows weekly trends
-                // max: 120 points (dynamic) - shows full history
-
-                let targetPoints: number;
-                switch (period) {
-                    case '1d':
-                        targetPoints = 48; // 30 min intervals
-                        break;
-                    case '7d':
-                        targetPoints = 56; // ~3 hour intervals
-                        break;
-                    case '30d':
-                        targetPoints = 60; // ~12 hour intervals
-                        break;
-                    case '365d':
-                        targetPoints = 73; // ~5 day intervals
-                        break;
-                    case 'max':
-                        targetPoints = 120; // full history
-                        break;
-                    default:
-                        targetPoints = 60;
-                }
-
-                const sampleRate = Math.max(1, Math.floor(prices.length / targetPoints));
-
-                priceHistory = prices
-                    .filter((_: number[], i: number) => i % sampleRate === 0)
-                    .map(([timestamp, price]: [number, number], index: number) => {
-                        const volumeIndex = index * sampleRate;
-                        const volume = volumes[volumeIndex]?.[1] || 0;
-                        return {
-                            timestamp,
-                            price,
-                            volume
-                        };
-                    });
+                priceHistory = prices.map(([timestamp, price]: [number, number], index: number) => {
+                    const volume = volumes[index]?.[1] || 0;
+                    return {
+                        timestamp,
+                        price,
+                        volume
+                    };
+                });
             }
 
             setData({
