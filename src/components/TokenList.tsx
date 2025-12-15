@@ -7,6 +7,7 @@ import Image from 'next/image';
 import AdCarousel from './AdCarousel';
 import { Pressable, StaggerContainer, StaggerItem, FadeIn } from './ui/Motion';
 import { useI18n } from '@/lib/i18n';
+import { formatTokenValue } from '@/lib/format';
 
 /** Memoized token item to prevent re-renders */
 const TokenItem = memo(function TokenItem({
@@ -40,7 +41,7 @@ const TokenItem = memo(function TokenItem({
                     <p className="font-medium text-white text-sm">{parseFloat(item.balance).toFixed(4)}</p>
                     <div className="flex items-center justify-end gap-1.5">
                         <span className="text-xs text-zinc-500">
-                            ${item.valueUSD.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                            {formatTokenValue(item.valueUSD)}
                         </span>
                         <span className={`text-[10px] px-1.5 py-0.5 rounded ${item.change24h >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
                             {item.change24h >= 0 ? '+' : ''}{item.change24h.toFixed(2)}%
