@@ -39,8 +39,41 @@ const PERIOD_LABELS: Record<ChartPeriod, string> = {
     '7d': '7D',
     '30d': '1M',
     '365d': '1Y',
-    'max': 'ALL'
+    'max': 'MAX'
 };
+
+// Token-specific brand colors
+const TOKEN_COLORS: Record<string, string> = {
+    // Major tokens
+    'WLD': '#ffffff',      // Worldcoin - White
+    'BTC': '#f7931a',      // Bitcoin - Orange
+    'WBTC': '#f7931a',     // Wrapped Bitcoin - Orange
+    'ETH': '#627eea',      // Ethereum - Blue/Purple
+    'WETH': '#627eea',     // Wrapped ETH - Blue/Purple
+    'USDC': '#2775ca',     // USDC - Blue
+    'USDT': '#26a17b',     // Tether - Green
+    'LINK': '#375bd2',     // Chainlink - Blue
+    'UNI': '#ff007a',      // Uniswap - Pink
+    'AAVE': '#b6509e',     // Aave - Purple
+    'DAI': '#f5ac37',      // DAI - Yellow
+    'sDAI': '#f5ac37',     // Savings DAI - Yellow
+    'SOL': '#00ffa3',      // Solana - Green
+    'uSOL': '#00ffa3',     // Unifinished SOL - Green
+    'MATIC': '#8247e5',    // Polygon - Purple
+    'ARB': '#28a0f0',      // Arbitrum - Blue
+    'OP': '#ff0420',       // Optimism - Red
+    'AVAX': '#e84142',     // Avalanche - Red
+    // World Chain specific
+    'ORO': '#ffd700',      // ORO - Gold
+    'FOOTBALL': '#00a651', // Football - Green
+    // Fallback for unknown tokens
+    'DEFAULT': '#ec4899',  // Pink (app theme)
+};
+
+// Get token color with fallback
+function getTokenColor(symbol: string): string {
+    return TOKEN_COLORS[symbol.toUpperCase()] || TOKEN_COLORS['DEFAULT'];
+}
 
 export default function TokenDetailModal({ tokenBalance, isOpen, onClose, onSend, onBuy }: TokenDetailModalProps) {
     const { t } = useI18n();
@@ -51,9 +84,9 @@ export default function TokenDetailModal({ tokenBalance, isOpen, onClose, onSend
     const chartRef = useRef<SVGSVGElement>(null);
     const { data: marketData, isLoading } = useTokenMarketData(token.symbol, chartPeriod);
 
-    // Chart dimensions
+    // Chart dimensions - increased height for better UX
     const width = 300;
-    const height = 120;
+    const height = 160;
     const padding = 10;
 
     // Calculate chart data
@@ -76,16 +109,17 @@ export default function TokenDetailModal({ tokenBalance, isOpen, onClose, onSend
         return { points, path, minPrice, maxPrice };
     }, [marketData]);
 
-    // Determine chart color based on price change
+    // Determine chart color based on token (brand color)
+    const chartColor = getTokenColor(token.symbol);
+    const chartGradientId = `gradient-${token.symbol}-${chartPeriod}`;
+
+    // Calculate price change for period display
     const priceChange = useMemo(() => {
         if (!marketData?.priceHistory?.length) return 0;
         const first = marketData.priceHistory[0].price;
         const last = marketData.priceHistory[marketData.priceHistory.length - 1].price;
         return ((last - first) / first) * 100;
     }, [marketData]);
-
-    const chartColor = priceChange >= 0 ? '#10b981' : '#ef4444';
-    const chartGradientId = `gradient-${token.symbol}-${chartPeriod}`;
 
     // Handle chart interaction
     const handleChartInteraction = useCallback((clientX: number) => {
@@ -244,7 +278,7 @@ export default function TokenDetailModal({ tokenBalance, isOpen, onClose, onSend
                             <svg
                                 ref={chartRef}
                                 viewBox={`0 0 ${width} ${height}`}
-                                className="w-full h-32 touch-none cursor-crosshair"
+                                className="w-full h-44 touch-none cursor-crosshair"
                                 onMouseMove={handleMouseMove}
                                 onMouseLeave={handleMouseLeave}
                                 onTouchMove={handleTouchMove}
