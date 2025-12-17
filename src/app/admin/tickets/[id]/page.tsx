@@ -56,6 +56,9 @@ export default function TicketDetailPage() {
     const [error, setError] = useState('');
     const [replyText, setReplyText] = useState('');
     const [internalNotes, setInternalNotes] = useState('');
+    const [replyAttachments, setReplyAttachments] = useState<File[]>([]);
+    const [replyAttachmentUrls, setReplyAttachmentUrls] = useState<string[]>([]);
+    const [isUploading, setIsUploading] = useState(false);
 
     const loadTicket = useCallback(async () => {
         if (!password || !ticketId) return;
@@ -121,19 +124,67 @@ export default function TicketDetailPage() {
         } catch (e) { console.error(e); }
     };
 
+    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+
+        const newFiles = files.slice(0, 3 - replyAttachments.length);
+        if (newFiles.length === 0) return;
+
+        setIsUploading(true);
+        const urls: string[] = [];
+
+        for (const file of newFiles) {
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('ticketId', ticketId);
+
+                const res = await fetch('/api/support/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    urls.push(data.url);
+                }
+            } catch (err) {
+                console.error('Upload error:', err);
+            }
+        }
+
+        setReplyAttachments(prev => [...prev, ...newFiles]);
+        setReplyAttachmentUrls(prev => [...prev, ...urls]);
+        setIsUploading(false);
+    };
+
+    const removeReplyAttachment = (index: number) => {
+        setReplyAttachments(prev => prev.filter((_, i) => i !== index));
+        setReplyAttachmentUrls(prev => prev.filter((_, i) => i !== index));
+    };
+
     const handleReply = async () => {
         if (!replyText.trim() || !ticket) return;
         setSending(true);
         try {
+            // Build reply with images if any
+            let fullReply = replyText;
+            if (replyAttachmentUrls.length > 0) {
+                fullReply += '\n\n📎 Imágenes adjuntas:\n' + replyAttachmentUrls.join('\n');
+            }
+
             await fetch('/api/support', {
                 method: 'PATCH',
                 headers: { 'Authorization': `Bearer ${password}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     ticketId: ticket.ticket_id,
-                    admin_reply: replyText,
+                    admin_reply: fullReply,
                     action: 'reply'
                 })
             });
+            setReplyAttachments([]);
+            setReplyAttachmentUrls([]);
             await loadTicket();
         } catch (e) { console.error(e); }
         setSending(false);
@@ -143,15 +194,22 @@ export default function TicketDetailPage() {
         if (!ticket) return;
         setSending(true);
         try {
+            let fullReply = replyText;
+            if (replyAttachmentUrls.length > 0) {
+                fullReply += '\n\n📎 Imágenes adjuntas:\n' + replyAttachmentUrls.join('\n');
+            }
+
             await fetch('/api/support', {
                 method: 'PATCH',
                 headers: { 'Authorization': `Bearer ${password}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     ticketId: ticket.ticket_id,
-                    admin_reply: replyText,
+                    admin_reply: fullReply,
                     action: 'resolve'
                 })
             });
+            setReplyAttachments([]);
+            setReplyAttachmentUrls([]);
             await loadTicket();
         } catch (e) { console.error(e); }
         setSending(false);
@@ -311,6 +369,44 @@ export default function TicketDetailPage() {
                             placeholder="Escribe tu respuesta aquí..."
                             className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white resize-none h-32 focus:border-pink-500 focus:outline-none"
                         />
+
+                        {/* Admin Reply Attachments */}
+                        <div className="mt-3">
+                            {replyAttachments.length > 0 && (
+                                <div className="flex gap-2 mb-2 flex-wrap">
+                                    {replyAttachments.map((file, index) => (
+                                        <div key={index} className="relative group">
+                                            <img
+                                                src={URL.createObjectURL(file)}
+                                                alt={`Attachment ${index + 1}`}
+                                                className="w-16 h-16 object-cover rounded-lg border border-zinc-700"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => removeReplyAttachment(index)}
+                                                className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {replyAttachments.length < 3 && ticket.status !== 'resolved' && (
+                                <label className="inline-flex items-center gap-2 px-3 py-1.5 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-400 text-sm cursor-pointer hover:border-pink-500/50 transition-colors">
+                                    <input
+                                        type="file"
+                                        accept="image/jpeg,image/png"
+                                        onChange={handleFileSelect}
+                                        className="hidden"
+                                        disabled={isUploading}
+                                    />
+                                    {isUploading ? 'Subiendo...' : '📷 Adjuntar imagen'}
+                                </label>
+                            )}
+                        </div>
+
                         <div className="flex gap-3 mt-4">
                             <button
                                 onClick={handleReply}
