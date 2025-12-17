@@ -62,93 +62,120 @@ async function sendConfirmationEmail(email: string, ticketId: string, topic: str
     if (!apiKey || !senderEmail) return;
 
     const t = lang === 'es' ? {
-        title: '¡Recibimos tu mensaje!',
-        subtitle: 'Te responderemos lo antes posible',
-        ticketLabel: 'Tu número de ticket',
+        title: 'Ticket Recibido',
+        subtitle: 'Hemos recibido tu solicitud de soporte',
+        ticketLabel: 'Número de Ticket',
         categoryLabel: 'Categoría',
-        nextSteps: 'Próximos pasos',
-        step1: 'Revisaremos tu solicitud',
-        step2: 'Te responderemos por email',
-        step3: 'Guarda este número de ticket',
-        timeframe: 'Tiempo estimado de respuesta: 24-48 horas',
-        footer: 'OrbId Wallet • Soporte'
+        responseTime: 'Te responderemos en 24-48 horas',
+        footer: 'Si tienes más preguntas, responde a este email.'
     } : {
-        title: 'We got your message!',
-        subtitle: "We'll get back to you as soon as possible",
-        ticketLabel: 'Your ticket number',
+        title: 'Ticket Received',
+        subtitle: "We've received your support request",
+        ticketLabel: 'Ticket Number',
         categoryLabel: 'Category',
-        nextSteps: 'What happens next',
-        step1: "We'll review your request",
-        step2: "You'll receive a reply via email",
-        step3: 'Keep this ticket number for reference',
-        timeframe: 'Expected response time: 24-48 hours',
-        footer: 'OrbId Wallet • Support'
+        responseTime: "We'll respond within 24-48 hours",
+        footer: 'If you have more questions, reply to this email.'
     };
 
     const topicLabels: Record<string, Record<string, string>> = {
         en: { general: 'General Question', transactions: 'Transaction Issue', account: 'Account Help', security: 'Security', other: 'Other' },
-        es: { general: 'Pregunta General', transactions: 'Transacciones', account: 'Cuenta', security: 'Seguridad', other: 'Otro' }
+        es: { general: 'Pregunta General', transactions: 'Problema de Transacción', account: 'Ayuda con Cuenta', security: 'Seguridad', other: 'Otro' }
     };
 
     const html = `
 <!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#000;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#000;padding:32px 16px;">
-<tr><td align="center">
-<table width="100%" style="max-width:480px;" cellpadding="0" cellspacing="0">
-    <!-- Logo -->
-    <tr><td style="padding-bottom:32px;text-align:center;">
-        <img src="https://app.orbidwallet.com/logo.png" alt="OrbId" width="56" height="56" style="border-radius:16px;">
-    </td></tr>
-    
-    <!-- Main Card -->
-    <tr><td style="background:#111;border-radius:24px;padding:40px 32px;">
-        <!-- Header -->
-        <h1 style="margin:0 0 8px;color:#fff;font-size:28px;font-weight:700;text-align:center;">${t.title}</h1>
-        <p style="margin:0 0 32px;color:#888;font-size:16px;text-align:center;">${t.subtitle}</p>
-        
-        <!-- Ticket ID Box -->
-        <div style="background:#1a1a1a;border-radius:16px;padding:24px;margin-bottom:24px;text-align:center;border:1px solid #333;">
-            <p style="margin:0 0 8px;color:#666;font-size:12px;text-transform:uppercase;letter-spacing:1px;">${t.ticketLabel}</p>
-            <p style="margin:0;color:#fff;font-size:24px;font-weight:700;font-family:'SF Mono',Monaco,monospace;letter-spacing:2px;">${ticketId}</p>
-        </div>
-        
-        <!-- Category -->
-        <div style="background:#1a1a1a;border-radius:16px;padding:20px;margin-bottom:32px;border:1px solid #333;">
-            <p style="margin:0 0 4px;color:#666;font-size:12px;text-transform:uppercase;letter-spacing:1px;">${t.categoryLabel}</p>
-            <p style="margin:0;color:#fff;font-size:16px;">${topicLabels[lang][topic] || topic}</p>
-        </div>
-        
-        <!-- Next Steps -->
-        <p style="margin:0 0 16px;color:#fff;font-size:14px;font-weight:600;">${t.nextSteps}</p>
-        <div style="margin-bottom:24px;">
-            <div style="display:flex;align-items:center;margin-bottom:12px;">
-                <span style="color:#ec4899;font-size:16px;margin-right:12px;">1.</span>
-                <span style="color:#aaa;font-size:14px;">${t.step1}</span>
-            </div>
-            <div style="display:flex;align-items:center;margin-bottom:12px;">
-                <span style="color:#ec4899;font-size:16px;margin-right:12px;">2.</span>
-                <span style="color:#aaa;font-size:14px;">${t.step2}</span>
-            </div>
-            <div style="display:flex;align-items:center;">
-                <span style="color:#ec4899;font-size:16px;margin-right:12px;">3.</span>
-                <span style="color:#aaa;font-size:14px;">${t.step3}</span>
-            </div>
-        </div>
-        
-        <!-- Timeframe -->
-        <p style="margin:0;padding:16px;background:linear-gradient(135deg,rgba(236,72,153,0.15),rgba(168,85,247,0.15));border-radius:12px;color:#f472b6;font-size:14px;text-align:center;">${t.timeframe}</p>
-    </td></tr>
-    
-    <!-- Footer -->
-    <tr><td style="padding-top:24px;text-align:center;">
-        <p style="margin:0;color:#444;font-size:12px;">${t.footer}</p>
-    </td></tr>
-</table>
-</td></tr>
-</table>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; background-color: #000000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #000000; padding: 40px 20px;">
+        <tr>
+            <td align="center">
+                <table width="100%" max-width="400px" cellpadding="0" cellspacing="0" style="max-width: 400px;">
+                    <!-- Logo with Text -->
+                    <tr>
+                        <td align="center" style="padding-bottom: 30px;">
+                            <table cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td style="vertical-align: middle; padding-right: 12px;">
+                                        <img src="https://app.orbidwallet.com/logo.png" alt="OrbId" width="50" height="50" style="border-radius: 50%;" />
+                                    </td>
+                                    <td style="vertical-align: middle;">
+                                        <span style="color: #ffffff; font-size: 22px; font-weight: 700; letter-spacing: -0.5px;">OrbId Wallet</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Title -->
+                    <tr>
+                        <td align="center" style="padding-bottom: 10px;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600;">
+                                ${t.title}
+                            </h1>
+                        </td>
+                    </tr>
+                    
+                    <!-- Subtitle -->
+                    <tr>
+                        <td align="center" style="padding-bottom: 30px;">
+                            <p style="margin: 0; color: #a1a1aa; font-size: 14px;">
+                                ${t.subtitle}
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Ticket ID Box -->
+                    <tr>
+                        <td align="center" style="padding-bottom: 20px;">
+                            <div style="background: linear-gradient(135deg, rgba(236,72,153,0.1), rgba(139,92,246,0.1)); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px 40px;">
+                                <p style="margin: 0 0 8px; color: #a1a1aa; font-size: 12px;">${t.ticketLabel}</p>
+                                <span style="color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: 2px; font-family: monospace;">
+                                    ${ticketId}
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Category -->
+                    <tr>
+                        <td align="center" style="padding-bottom: 20px;">
+                            <p style="margin: 0 0 4px; color: #a1a1aa; font-size: 12px;">${t.categoryLabel}</p>
+                            <p style="margin: 0; color: #ffffff; font-size: 16px;">${topicLabels[lang][topic] || topic}</p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Response Time -->
+                    <tr>
+                        <td align="center" style="padding-bottom: 20px;">
+                            <p style="margin: 0; color: #ec4899; font-size: 14px; font-weight: 500;">
+                                ${t.responseTime}
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Divider -->
+                    <tr>
+                        <td style="padding-bottom: 20px;">
+                            <div style="border-top: 1px solid rgba(255,255,255,0.1);"></div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td align="center">
+                            <p style="margin: 0; color: #52525b; font-size: 11px; line-height: 1.6;">
+                                ${t.footer}
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>`;
 
@@ -159,7 +186,7 @@ async function sendConfirmationEmail(email: string, ticketId: string, topic: str
             body: JSON.stringify({
                 sender: { name: 'OrbId Wallet', email: senderEmail },
                 to: [{ email }],
-                subject: lang === 'es' ? `✅ Ticket ${ticketId} recibido` : `✅ Ticket ${ticketId} received`,
+                subject: lang === 'es' ? `Ticket #${ticketId} - Recibido` : `Ticket #${ticketId} - Received`,
                 htmlContent: html
             })
         });
@@ -173,97 +200,117 @@ async function sendResolvedEmail(email: string, ticketId: string, adminReply: st
     if (!apiKey || !senderEmail) return;
 
     const t = lang === 'es' ? {
-        title: '¡Problema resuelto!',
-        subtitle: 'Tu ticket ha sido atendido',
+        title: 'Ticket Resuelto',
+        subtitle: 'Tu solicitud ha sido atendida',
         ticketLabel: 'Ticket',
         responseLabel: 'Nuestra respuesta',
-        noReply: 'Tu problema ha sido resuelto satisfactoriamente.',
-        attachmentsLabel: 'Imágenes adjuntas',
-        needHelp: '¿Aún necesitas ayuda?',
-        reopen: 'Responde a este email para reabrir el ticket',
-        agent: 'Thian',
-        role: 'OrbId Labs Support',
-        footer: 'OrbId Wallet • Soporte'
+        noReply: 'Tu problema ha sido resuelto.',
+        attachmentsLabel: 'Archivos adjuntos',
+        footer: 'Si aún necesitas ayuda, responde a este email.'
     } : {
-        title: 'Issue resolved!',
-        subtitle: 'Your ticket has been addressed',
+        title: 'Ticket Resolved',
+        subtitle: 'Your request has been addressed',
         ticketLabel: 'Ticket',
         responseLabel: 'Our response',
-        noReply: 'Your issue has been successfully resolved.',
-        attachmentsLabel: 'Attached images',
-        needHelp: 'Still need help?',
-        reopen: 'Reply to this email to reopen the ticket',
-        agent: 'Thian',
-        role: 'OrbId Labs Support',
-        footer: 'OrbId Wallet • Support'
+        noReply: 'Your issue has been resolved.',
+        attachmentsLabel: 'Attachments',
+        footer: 'If you still need help, just reply to this email.'
     };
 
-    // Build attachment images HTML
     const attachmentsHtml = attachmentUrls.length > 0 ? `
-        <div style="margin-top:20px;">
-            <p style="margin:0 0 12px;color:#666;font-size:12px;text-transform:uppercase;letter-spacing:1px;">📎 ${t.attachmentsLabel}</p>
-            ${attachmentUrls.map(url => `<img src="${url}" alt="Attachment" style="max-width:100%;border-radius:12px;margin-bottom:12px;border:1px solid #333;">`).join('')}
-        </div>` : '';
+                    <tr>
+                        <td align="center" style="padding-top: 20px;">
+                            <p style="margin: 0 0 12px; color: #a1a1aa; font-size: 12px;">${t.attachmentsLabel}</p>
+                            ${attachmentUrls.map(url => `<img src="${url}" alt="Attachment" style="max-width: 100%; border-radius: 8px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.1);">`).join('')}
+                        </td>
+                    </tr>` : '';
 
     const html = `
 <!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#000;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#000;padding:32px 16px;">
-<tr><td align="center">
-<table width="100%" style="max-width:480px;" cellpadding="0" cellspacing="0">
-    <!-- Logo -->
-    <tr><td style="padding-bottom:32px;text-align:center;">
-        <img src="https://app.orbidwallet.com/logo.png" alt="OrbId" width="56" height="56" style="border-radius:16px;">
-    </td></tr>
-    
-    <!-- Main Card -->
-    <tr><td style="background:#111;border-radius:24px;padding:40px 32px;">
-        <!-- Success Badge -->
-        <div style="text-align:center;margin-bottom:24px;">
-            <span style="display:inline-block;background:#10b981;color:#fff;font-size:32px;width:64px;height:64px;line-height:64px;border-radius:50%;">✓</span>
-        </div>
-        
-        <!-- Header -->
-        <h1 style="margin:0 0 8px;color:#fff;font-size:28px;font-weight:700;text-align:center;">${t.title}</h1>
-        <p style="margin:0 0 32px;color:#888;font-size:16px;text-align:center;">${t.subtitle}</p>
-        
-        <!-- Ticket ID -->
-        <p style="margin:0 0 24px;color:#666;font-size:13px;text-align:center;">${t.ticketLabel} <span style="color:#fff;font-family:'SF Mono',Monaco,monospace;">${ticketId}</span></p>
-        
-        <!-- Response Box -->
-        <div style="background:#1a1a1a;border-radius:16px;padding:24px;margin-bottom:24px;border:1px solid #333;">
-            <p style="margin:0 0 12px;color:#10b981;font-size:12px;text-transform:uppercase;letter-spacing:1px;font-weight:600;">${t.responseLabel}</p>
-            <p style="margin:0;color:#e5e5e5;font-size:15px;line-height:1.6;">${adminReply || t.noReply}</p>
-            ${attachmentsHtml}
-        </div>
-        
-        <!-- Agent Signature -->
-        <div style="display:flex;align-items:center;margin-bottom:24px;">
-            <div style="width:40px;height:40px;background:linear-gradient(135deg,#ec4899,#8b5cf6);border-radius:50%;margin-right:12px;display:flex;align-items:center;justify-content:center;">
-                <span style="color:#fff;font-size:16px;font-weight:700;">${t.agent.charAt(0)}</span>
-            </div>
-            <div>
-                <p style="margin:0;color:#fff;font-size:14px;font-weight:600;">${t.agent}</p>
-                <p style="margin:0;color:#666;font-size:12px;">${t.role}</p>
-            </div>
-        </div>
-        
-        <!-- Reopen Option -->
-        <div style="background:rgba(236,72,153,0.1);border-radius:12px;padding:16px;text-align:center;border:1px solid rgba(236,72,153,0.2);">
-            <p style="margin:0 0 4px;color:#fff;font-size:13px;font-weight:500;">${t.needHelp}</p>
-            <p style="margin:0;color:#888;font-size:12px;">${t.reopen}</p>
-        </div>
-    </td></tr>
-    
-    <!-- Footer -->
-    <tr><td style="padding-top:24px;text-align:center;">
-        <p style="margin:0;color:#444;font-size:12px;">${t.footer}</p>
-    </td></tr>
-</table>
-</td></tr>
-</table>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; background-color: #000000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #000000; padding: 40px 20px;">
+        <tr>
+            <td align="center">
+                <table width="100%" max-width="400px" cellpadding="0" cellspacing="0" style="max-width: 400px;">
+                    <!-- Logo with Text -->
+                    <tr>
+                        <td align="center" style="padding-bottom: 30px;">
+                            <table cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td style="vertical-align: middle; padding-right: 12px;">
+                                        <img src="https://app.orbidwallet.com/logo.png" alt="OrbId" width="50" height="50" style="border-radius: 50%;" />
+                                    </td>
+                                    <td style="vertical-align: middle;">
+                                        <span style="color: #ffffff; font-size: 22px; font-weight: 700; letter-spacing: -0.5px;">OrbId Wallet</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Title -->
+                    <tr>
+                        <td align="center" style="padding-bottom: 10px;">
+                            <h1 style="margin: 0; color: #10b981; font-size: 24px; font-weight: 600;">
+                                ✓ ${t.title}
+                            </h1>
+                        </td>
+                    </tr>
+                    
+                    <!-- Subtitle -->
+                    <tr>
+                        <td align="center" style="padding-bottom: 20px;">
+                            <p style="margin: 0; color: #a1a1aa; font-size: 14px;">
+                                ${t.subtitle}
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Ticket ID -->
+                    <tr>
+                        <td align="center" style="padding-bottom: 20px;">
+                            <p style="margin: 0; color: #71717a; font-size: 12px;">
+                                ${t.ticketLabel} <span style="color: #ffffff; font-family: monospace;">#${ticketId}</span>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Response Box -->
+                    <tr>
+                        <td align="center" style="padding-bottom: 20px;">
+                            <div style="background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(139,92,246,0.1)); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; text-align: left;">
+                                <p style="margin: 0 0 8px; color: #a1a1aa; font-size: 12px;">${t.responseLabel}</p>
+                                <p style="margin: 0; color: #ffffff; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${adminReply || t.noReply}</p>
+                            </div>
+                        </td>
+                    </tr>
+
+                    ${attachmentsHtml}
+
+                    <!-- Divider -->
+                    <tr>
+                        <td style="padding-bottom: 20px;">
+                            <div style="border-top: 1px solid rgba(255,255,255,0.1);"></div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td align="center">
+                            <p style="margin: 0; color: #52525b; font-size: 11px; line-height: 1.6;">
+                                ${t.footer}
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>`;
 
@@ -274,7 +321,7 @@ async function sendResolvedEmail(email: string, ticketId: string, adminReply: st
             body: JSON.stringify({
                 sender: { name: 'OrbId Wallet', email: senderEmail },
                 to: [{ email }],
-                subject: lang === 'es' ? `✅ Ticket ${ticketId} resuelto` : `✅ Ticket ${ticketId} resolved`,
+                subject: lang === 'es' ? `Ticket #${ticketId} - Resuelto ✓` : `Ticket #${ticketId} - Resolved ✓`,
                 htmlContent: html
             })
         });
@@ -288,92 +335,126 @@ async function sendReplyEmail(email: string, ticketId: string, replyMessage: str
     if (!apiKey || !senderEmail) return;
 
     const t = lang === 'es' ? {
-        title: 'Tienes una respuesta',
-        subtitle: 'Nuestro equipo ha respondido a tu ticket',
+        title: 'Nueva Respuesta',
+        subtitle: 'Tienes una nueva respuesta en tu ticket',
         ticketLabel: 'Ticket',
         messageLabel: 'Mensaje',
-        attachmentsLabel: 'Imágenes adjuntas',
-        replyPrompt: 'Responde a este email para continuar la conversación',
-        agent: 'Thian',
-        role: 'OrbId Labs Support',
-        footer: 'OrbId Wallet • Soporte'
+        attachmentsLabel: 'Archivos adjuntos',
+        replyPrompt: 'Responde a este email para continuar la conversación.',
+        footer: 'Si tienes más preguntas, responde a este email.'
     } : {
-        title: 'You have a reply',
-        subtitle: 'Our team has responded to your ticket',
+        title: 'New Reply',
+        subtitle: 'You have a new reply on your ticket',
         ticketLabel: 'Ticket',
         messageLabel: 'Message',
-        attachmentsLabel: 'Attached images',
-        replyPrompt: 'Reply to this email to continue the conversation',
-        agent: 'Thian',
-        role: 'OrbId Labs Support',
-        footer: 'OrbId Wallet • Support'
+        attachmentsLabel: 'Attachments',
+        replyPrompt: 'Reply to this email to continue the conversation.',
+        footer: 'If you have more questions, reply to this email.'
     };
 
-    // Build attachment images HTML
     const attachmentsHtml = attachmentUrls.length > 0 ? `
-        <div style="margin-top:20px;">
-            <p style="margin:0 0 12px;color:#666;font-size:12px;text-transform:uppercase;letter-spacing:1px;">📎 ${t.attachmentsLabel}</p>
-            ${attachmentUrls.map(url => `<img src="${url}" alt="Attachment" style="max-width:100%;border-radius:12px;margin-bottom:12px;border:1px solid #333;">`).join('')}
-        </div>` : '';
+                    <tr>
+                        <td align="center" style="padding-top: 20px;">
+                            <p style="margin: 0 0 12px; color: #a1a1aa; font-size: 12px;">${t.attachmentsLabel}</p>
+                            ${attachmentUrls.map(url => `<img src="${url}" alt="Attachment" style="max-width: 100%; border-radius: 8px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.1);">`).join('')}
+                        </td>
+                    </tr>` : '';
 
     const html = `
 <!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#000;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#000;padding:32px 16px;">
-<tr><td align="center">
-<table width="100%" style="max-width:480px;" cellpadding="0" cellspacing="0">
-    <!-- Logo -->
-    <tr><td style="padding-bottom:32px;text-align:center;">
-        <img src="https://app.orbidwallet.com/logo.png" alt="OrbId" width="56" height="56" style="border-radius:16px;">
-    </td></tr>
-    
-    <!-- Main Card -->
-    <tr><td style="background:#111;border-radius:24px;padding:40px 32px;">
-        <!-- Reply Badge -->
-        <div style="text-align:center;margin-bottom:24px;">
-            <span style="display:inline-block;background:#f59e0b;color:#000;font-size:24px;width:56px;height:56px;line-height:56px;border-radius:50%;">💬</span>
-        </div>
-        
-        <!-- Header -->
-        <h1 style="margin:0 0 8px;color:#fff;font-size:28px;font-weight:700;text-align:center;">${t.title}</h1>
-        <p style="margin:0 0 32px;color:#888;font-size:16px;text-align:center;">${t.subtitle}</p>
-        
-        <!-- Ticket ID -->
-        <p style="margin:0 0 24px;color:#666;font-size:13px;text-align:center;">${t.ticketLabel} <span style="color:#fff;font-family:'SF Mono',Monaco,monospace;">${ticketId}</span></p>
-        
-        <!-- Message Box -->
-        <div style="background:#1a1a1a;border-radius:16px;padding:24px;margin-bottom:24px;border:1px solid #333;">
-            <p style="margin:0 0 12px;color:#f59e0b;font-size:12px;text-transform:uppercase;letter-spacing:1px;font-weight:600;">${t.messageLabel}</p>
-            <p style="margin:0;color:#e5e5e5;font-size:15px;line-height:1.6;white-space:pre-wrap;">${replyMessage}</p>
-            ${attachmentsHtml}
-        </div>
-        
-        <!-- Agent Signature -->
-        <div style="display:flex;align-items:center;margin-bottom:24px;">
-            <div style="width:40px;height:40px;background:linear-gradient(135deg,#f59e0b,#ec4899);border-radius:50%;margin-right:12px;display:flex;align-items:center;justify-content:center;">
-                <span style="color:#fff;font-size:16px;font-weight:700;">${t.agent.charAt(0)}</span>
-            </div>
-            <div>
-                <p style="margin:0;color:#fff;font-size:14px;font-weight:600;">${t.agent}</p>
-                <p style="margin:0;color:#666;font-size:12px;">${t.role}</p>
-            </div>
-        </div>
-        
-        <!-- Reply Prompt -->
-        <div style="background:rgba(245,158,11,0.1);border-radius:12px;padding:16px;text-align:center;border:1px solid rgba(245,158,11,0.2);">
-            <p style="margin:0;color:#f59e0b;font-size:13px;">${t.replyPrompt}</p>
-        </div>
-    </td></tr>
-    
-    <!-- Footer -->
-    <tr><td style="padding-top:24px;text-align:center;">
-        <p style="margin:0;color:#444;font-size:12px;">${t.footer}</p>
-    </td></tr>
-</table>
-</td></tr>
-</table>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; background-color: #000000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #000000; padding: 40px 20px;">
+        <tr>
+            <td align="center">
+                <table width="100%" max-width="400px" cellpadding="0" cellspacing="0" style="max-width: 400px;">
+                    <!-- Logo with Text -->
+                    <tr>
+                        <td align="center" style="padding-bottom: 30px;">
+                            <table cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td style="vertical-align: middle; padding-right: 12px;">
+                                        <img src="https://app.orbidwallet.com/logo.png" alt="OrbId" width="50" height="50" style="border-radius: 50%;" />
+                                    </td>
+                                    <td style="vertical-align: middle;">
+                                        <span style="color: #ffffff; font-size: 22px; font-weight: 700; letter-spacing: -0.5px;">OrbId Wallet</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Title -->
+                    <tr>
+                        <td align="center" style="padding-bottom: 10px;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600;">
+                                ${t.title}
+                            </h1>
+                        </td>
+                    </tr>
+                    
+                    <!-- Subtitle -->
+                    <tr>
+                        <td align="center" style="padding-bottom: 20px;">
+                            <p style="margin: 0; color: #a1a1aa; font-size: 14px;">
+                                ${t.subtitle}
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Ticket ID -->
+                    <tr>
+                        <td align="center" style="padding-bottom: 20px;">
+                            <p style="margin: 0; color: #71717a; font-size: 12px;">
+                                ${t.ticketLabel} <span style="color: #ffffff; font-family: monospace;">#${ticketId}</span>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Message Box -->
+                    <tr>
+                        <td align="center" style="padding-bottom: 20px;">
+                            <div style="background: linear-gradient(135deg, rgba(236,72,153,0.1), rgba(139,92,246,0.1)); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; text-align: left;">
+                                <p style="margin: 0 0 8px; color: #a1a1aa; font-size: 12px;">${t.messageLabel}</p>
+                                <p style="margin: 0; color: #ffffff; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${replyMessage}</p>
+                            </div>
+                        </td>
+                    </tr>
+
+                    ${attachmentsHtml}
+
+                    <!-- Reply Prompt -->
+                    <tr>
+                        <td align="center" style="padding-bottom: 20px;">
+                            <p style="margin: 0; color: #ec4899; font-size: 13px; font-weight: 500;">
+                                ${t.replyPrompt}
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Divider -->
+                    <tr>
+                        <td style="padding-bottom: 20px;">
+                            <div style="border-top: 1px solid rgba(255,255,255,0.1);"></div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td align="center">
+                            <p style="margin: 0; color: #52525b; font-size: 11px; line-height: 1.6;">
+                                ${t.footer}
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>`;
 
@@ -382,9 +463,9 @@ async function sendReplyEmail(email: string, ticketId: string, replyMessage: str
             method: 'POST',
             headers: { 'accept': 'application/json', 'api-key': apiKey, 'content-type': 'application/json' },
             body: JSON.stringify({
-                sender: { name: 'OrbId Wallet', email: senderEmail },
+                sender: { name: 'OrbId', email: senderEmail },
                 to: [{ email }],
-                subject: lang === 'es' ? `💬 Respuesta a tu ticket ${ticketId}` : `💬 Reply to your ticket ${ticketId}`,
+                subject: lang === 'es' ? `Re: Ticket ${ticketId}` : `Re: Ticket ${ticketId}`,
                 htmlContent: html
             })
         });
