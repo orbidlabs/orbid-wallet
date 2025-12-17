@@ -139,7 +139,7 @@ async function sendConfirmationEmail(email: string, ticketId: string, topic: str
 }
 
 /** Send resolved email */
-async function sendResolvedEmail(email: string, ticketId: string, adminReply: string | null, lang: string) {
+async function sendResolvedEmail(email: string, ticketId: string, adminReply: string | null, lang: string, attachmentUrls: string[] = []) {
     const apiKey = process.env.BREVO_API_KEY;
     const senderEmail = process.env.BREVO_SENDER_EMAIL;
     if (!apiKey || !senderEmail) return;
@@ -149,6 +149,7 @@ async function sendResolvedEmail(email: string, ticketId: string, adminReply: st
         subtitle: 'Tu solicitud ha sido atendida',
         replyLabel: 'Respuesta del equipo',
         noReply: 'Tu problema ha sido resuelto.',
+        attachmentsLabel: 'Imágenes adjuntas',
         footer: 'Si aún tienes problemas, responde a este email o crea un nuevo ticket.',
         signature: 'Equipo de Soporte de OrbId Wallet',
         agent: 'Thian from OrbId Labs'
@@ -157,10 +158,18 @@ async function sendResolvedEmail(email: string, ticketId: string, adminReply: st
         subtitle: 'Your request has been addressed',
         replyLabel: 'Team Response',
         noReply: 'Your issue has been resolved.',
+        attachmentsLabel: 'Attached Images',
         footer: 'If you still have issues, reply to this email or create a new ticket.',
         signature: 'OrbId Wallet Support Team',
         agent: 'Thian from OrbId Labs'
     };
+
+    // Build attachment images HTML
+    const attachmentsHtml = attachmentUrls.length > 0 ? `
+    <tr><td style="padding-top:16px;">
+        <p style="color:#a1a1aa;font-size:12px;margin:0 0 8px;">📎 ${t.attachmentsLabel}</p>
+        ${attachmentUrls.map(url => `<img src="${url}" alt="Attachment" style="max-width:100%;border-radius:8px;margin-bottom:8px;">`).join('')}
+    </td></tr>` : '';
 
     const html = `
 <!DOCTYPE html>
@@ -190,6 +199,7 @@ async function sendResolvedEmail(email: string, ticketId: string, adminReply: st
         <p style="color:#a1a1aa;font-size:12px;margin:16px 0 8px;">${t.replyLabel}</p>
         <p style="color:#fff;font-size:14px;margin:0;">${adminReply || t.noReply}</p>
     </td></tr>
+    ${attachmentsHtml}
     <tr><td style="padding-top:24px;">
         <p style="color:#a1a1aa;font-size:13px;margin:0 0 4px;">${t.agent}</p>
         <p style="color:#71717a;font-size:12px;margin:0;">${t.signature}</p>
@@ -218,7 +228,7 @@ async function sendResolvedEmail(email: string, ticketId: string, adminReply: st
 }
 
 /** Send reply email (for in-progress tickets) */
-async function sendReplyEmail(email: string, ticketId: string, replyMessage: string, lang: string) {
+async function sendReplyEmail(email: string, ticketId: string, replyMessage: string, lang: string, attachmentUrls: string[] = []) {
     const apiKey = process.env.BREVO_API_KEY;
     const senderEmail = process.env.BREVO_SENDER_EMAIL;
     if (!apiKey || !senderEmail) return;
@@ -227,6 +237,7 @@ async function sendReplyEmail(email: string, ticketId: string, replyMessage: str
         title: 'Nueva Respuesta',
         subtitle: 'Hemos respondido a tu ticket de soporte',
         replyLabel: 'Mensaje del equipo',
+        attachmentsLabel: 'Imágenes adjuntas',
         footer: 'Responde a este email para continuar la conversación.',
         signature: 'Equipo de Soporte de OrbId Wallet',
         agent: 'Thian from OrbId Labs'
@@ -234,10 +245,18 @@ async function sendReplyEmail(email: string, ticketId: string, replyMessage: str
         title: 'New Reply',
         subtitle: 'We have responded to your support ticket',
         replyLabel: 'Team Message',
+        attachmentsLabel: 'Attached Images',
         footer: 'Reply to this email to continue the conversation.',
         signature: 'OrbId Wallet Support Team',
         agent: 'Thian from OrbId Labs'
     };
+
+    // Build attachment images HTML
+    const attachmentsHtml = attachmentUrls.length > 0 ? `
+    <tr><td style="padding-top:16px;">
+        <p style="color:#a1a1aa;font-size:12px;margin:0 0 8px;">📎 ${t.attachmentsLabel}</p>
+        ${attachmentUrls.map(url => `<img src="${url}" alt="Attachment" style="max-width:100%;border-radius:8px;margin-bottom:8px;">`).join('')}
+    </td></tr>` : '';
 
     const html = `
 <!DOCTYPE html>
@@ -267,6 +286,7 @@ async function sendReplyEmail(email: string, ticketId: string, replyMessage: str
         <p style="color:#a1a1aa;font-size:12px;margin:16px 0 8px;">${t.replyLabel}</p>
         <p style="color:#fff;font-size:14px;margin:0;white-space:pre-wrap;">${replyMessage}</p>
     </td></tr>
+    ${attachmentsHtml}
     <tr><td style="padding-top:24px;">
         <p style="color:#a1a1aa;font-size:13px;margin:0 0 4px;">${t.agent}</p>
         <p style="color:#71717a;font-size:12px;margin:0;">${t.signature}</p>
@@ -375,7 +395,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     try {
-        const { ticketId, status, priority, internal_notes, admin_reply, action } = await request.json();
+        const { ticketId, status, priority, internal_notes, admin_reply, action, attachmentUrls = [] } = await request.json();
 
         if (!ticketId) {
             return NextResponse.json({ error: 'Ticket ID required' }, { status: 400 });
@@ -417,12 +437,12 @@ export async function PATCH(request: NextRequest) {
             return NextResponse.json({ error: 'Update failed' }, { status: 500 });
         }
 
-        // Send emails based on action
+        // Send emails based on action (with embedded images)
         if (current?.email) {
             if (action === 'reply' && admin_reply) {
-                await sendReplyEmail(current.email, ticketId, admin_reply, current.language || 'en');
+                await sendReplyEmail(current.email, ticketId, admin_reply, current.language || 'en', attachmentUrls);
             } else if (action === 'resolve') {
-                await sendResolvedEmail(current.email, ticketId, admin_reply, current.language || 'en');
+                await sendResolvedEmail(current.email, ticketId, admin_reply, current.language || 'en', attachmentUrls);
             }
         }
 

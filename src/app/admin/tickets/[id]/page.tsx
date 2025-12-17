@@ -168,19 +168,14 @@ export default function TicketDetailPage() {
         if (!replyText.trim() || !ticket) return;
         setSending(true);
         try {
-            // Build reply with images if any
-            let fullReply = replyText;
-            if (replyAttachmentUrls.length > 0) {
-                fullReply += '\n\n📎 Imágenes adjuntas:\n' + replyAttachmentUrls.join('\n');
-            }
-
             await fetch('/api/support', {
                 method: 'PATCH',
                 headers: { 'Authorization': `Bearer ${password}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     ticketId: ticket.ticket_id,
-                    admin_reply: fullReply,
-                    action: 'reply'
+                    admin_reply: replyText,
+                    action: 'reply',
+                    attachmentUrls: replyAttachmentUrls
                 })
             });
             setReplyAttachments([]);
@@ -194,18 +189,14 @@ export default function TicketDetailPage() {
         if (!ticket) return;
         setSending(true);
         try {
-            let fullReply = replyText;
-            if (replyAttachmentUrls.length > 0) {
-                fullReply += '\n\n📎 Imágenes adjuntas:\n' + replyAttachmentUrls.join('\n');
-            }
-
             await fetch('/api/support', {
                 method: 'PATCH',
                 headers: { 'Authorization': `Bearer ${password}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     ticketId: ticket.ticket_id,
-                    admin_reply: fullReply,
-                    action: 'resolve'
+                    admin_reply: replyText,
+                    action: 'resolve',
+                    attachmentUrls: replyAttachmentUrls
                 })
             });
             setReplyAttachments([]);
