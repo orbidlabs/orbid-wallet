@@ -3,7 +3,7 @@
  * These are separate from client-side translations to avoid importing React in server code
  */
 
-export type SupportedLanguage = 'en' | 'es' | 'zh' | 'hi' | 'pt' | 'fr' | 'de' | 'ja' | 'ko' | 'ar';
+export type SupportedLanguage = 'en' | 'es' | 'zh_CN' | 'hi' | 'pt' | 'fr' | 'de' | 'ja' | 'ko' | 'ar' | 'ca' | 'id' | 'ms' | 'pl' | 'es_419' | 'th' | 'zh_TW';
 
 interface EmailTranslations {
     subject: string;
@@ -31,13 +31,21 @@ const emailTranslations: Record<SupportedLanguage, EmailTranslations> = {
         termsAgreement: 'Al completar tu inicio de sesión, aceptas nuestros Términos de Servicio y Política de Privacidad.',
         securityWarning: 'Si no intentaste iniciar sesión pero recibiste este correo, puedes ignorarlo con seguridad. Ninguna cuenta será iniciada. No compartas ni reenvíes este código de 6 dígitos. Nuestro equipo de soporte nunca te pedirá este código. No leas este código en voz alta. Ten cuidado con intentos de phishing y verifica siempre el remitente y dominio (orbidwallet.com). Si te preocupa la seguridad de tu cuenta, visita Ayuda y Soporte en la mini app.',
     },
-    zh: {
+    zh_CN: {
         subject: '是您的 OrbId Wallet 登录验证码',
         title: '您的登录验证码',
         subtitle: '输入此验证码以登录 OrbId Wallet',
         expiresIn: '此验证码将在10分钟后过期',
         termsAgreement: '完成登录即表示您同意我们的服务条款和隐私政策。',
         securityWarning: '如果您没有尝试登录却收到此邮件，请放心忽略。不会有任何账户被登录。请勿与任何人分享或转发此6位验证码。我们的客服团队永远不会索要此验证码。请勿大声读出此验证码。请警惕钓鱼攻击，始终验证发件人和域名（orbidwallet.com）。如果您担心账户安全，请访问迷你应用中的帮助与支持。',
+    },
+    zh_TW: {
+        subject: '是您的 OrbId Wallet 登入驗證碼',
+        title: '您的登入驗證碼',
+        subtitle: '輸入此驗證碼以登入 OrbId Wallet',
+        expiresIn: '此驗證碼將在10分鐘後過期',
+        termsAgreement: '完成登入即表示您同意我們的服務條款和隱私政策。',
+        securityWarning: '如果您沒有嘗試登入卻收到此郵件，請放心忽略。不會有任何帳戶被登入。請勿與任何人分享或轉發此6位驗證碼。我們的客服團隊永遠不會索要此驗證碼。請勿大聲讀出此驗證碼。請警惕釣魚攻擊，始終驗證發件人和網域（orbidwallet.com）。如果您擔心帳戶安全，請訪問迷你應用中的幫助與支援。',
     },
     hi: {
         subject: 'आपका OrbId Wallet लॉगिन कोड है',
@@ -94,6 +102,54 @@ const emailTranslations: Record<SupportedLanguage, EmailTranslations> = {
         expiresIn: 'ينتهي هذا الرمز خلال 10 دقائق',
         termsAgreement: 'من خلال إكمال تسجيل الدخول، فإنك توافق على شروط الخدمة وسياسة الخصوصية.',
         securityWarning: 'إذا لم تحاول تسجيل الدخول ولكنك تلقيت هذا البريد الإلكتروني، يمكنك تجاهله بأمان. لن يتم تسجيل الدخول إلى أي حساب. لا تشارك أو تعيد توجيه هذا الرمز المكون من 6 أرقام. لن يطلب فريق خدمة العملاء لدينا هذا الرمز أبداً. لا تقرأ هذا الرمز بصوت عالٍ. احذر من محاولات التصيد الاحتيالي وتحقق دائماً من المرسل والنطاق (orbidwallet.com). إذا كنت قلقاً بشأن أمان حسابك، يرجى زيارة المساعدة والدعم في التطبيق المصغر.',
+    },
+    ca: {
+        subject: 'és el teu codi d\'inici de sessió d\'OrbId Wallet',
+        title: 'El Teu Codi d\'Accés',
+        subtitle: 'Introdueix aquest codi per iniciar sessió a OrbId Wallet',
+        expiresIn: 'Aquest codi caduca en 10 minuts',
+        termsAgreement: 'En completar el teu inici de sessió, acceptes els nostres Termes de Servei i Política de Privacitat.',
+        securityWarning: 'Si no has intentat iniciar sessió però has rebut aquest correu, pots ignorar-lo de manera segura. Cap compte serà iniciat. No comparteixis ni reenviïs aquest codi de 6 dígits. El nostre equip de suport mai et demanarà aquest codi.',
+    },
+    id: {
+        subject: 'adalah kode login OrbId Wallet Anda',
+        title: 'Kode Login Anda',
+        subtitle: 'Masukkan kode ini untuk masuk ke OrbId Wallet',
+        expiresIn: 'Kode ini kedaluwarsa dalam 10 menit',
+        termsAgreement: 'Dengan menyelesaikan login, Anda menyetujui Ketentuan Layanan dan Kebijakan Privasi kami.',
+        securityWarning: 'Jika Anda tidak mencoba login tetapi menerima email ini, Anda dapat mengabaikannya dengan aman. Tidak ada akun yang akan login. Jangan bagikan atau teruskan kode 6 digit ini. Tim layanan pelanggan kami tidak akan pernah meminta kode ini.',
+    },
+    ms: {
+        subject: 'adalah kod log masuk OrbId Wallet anda',
+        title: 'Kod Log Masuk Anda',
+        subtitle: 'Masukkan kod ini untuk log masuk ke OrbId Wallet',
+        expiresIn: 'Kod ini tamat tempoh dalam 10 minit',
+        termsAgreement: 'Dengan melengkapkan log masuk anda, anda bersetuju dengan Terma Perkhidmatan dan Dasar Privasi kami.',
+        securityWarning: 'Jika anda tidak cuba log masuk tetapi menerima e-mel ini, anda boleh mengabaikannya dengan selamat. Tiada akaun akan dilog masuk. Jangan kongsi atau majukan kod 6 digit ini. Pasukan perkhidmatan pelanggan kami tidak akan meminta kod ini.',
+    },
+    pl: {
+        subject: 'to Twój kod logowania OrbId Wallet',
+        title: 'Twój Kod Logowania',
+        subtitle: 'Wprowadź ten kod, aby zalogować się do OrbId Wallet',
+        expiresIn: 'Ten kod wygasa za 10 minut',
+        termsAgreement: 'Kończąc logowanie, akceptujesz nasze Warunki Usługi i Politykę Prywatności.',
+        securityWarning: 'Jeśli nie próbowałeś się zalogować, ale otrzymałeś ten e-mail, możesz go bezpiecznie zignorować. Żadne konto nie zostanie zalogowane. Nie udostępniaj ani nie przekazuj dalej tego 6-cyfrowego kodu. Nasz zespół obsługi klienta nigdy nie poprosi o ten kod.',
+    },
+    es_419: {
+        subject: 'es tu código de inicio de sesión de OrbId Wallet',
+        title: 'Tu Código de Acceso',
+        subtitle: 'Ingresa este código para iniciar sesión en OrbId Wallet',
+        expiresIn: 'Este código expira en 10 minutos',
+        termsAgreement: 'Al completar tu inicio de sesión, aceptas nuestros Términos de Servicio y Política de Privacidad.',
+        securityWarning: 'Si no intentaste iniciar sesión pero recibiste este correo, puedes ignorarlo con seguridad. Ninguna cuenta será iniciada. No compartas ni reenvíes este código de 6 dígitos. Nuestro equipo de soporte nunca te pedirá este código.',
+    },
+    th: {
+        subject: 'คือรหัสเข้าสู่ระบบ OrbId Wallet ของคุณ',
+        title: 'รหัสเข้าสู่ระบบของคุณ',
+        subtitle: 'ใส่รหัสนี้เพื่อเข้าสู่ระบบ OrbId Wallet',
+        expiresIn: 'รหัสนี้จะหมดอายุใน 10 นาที',
+        termsAgreement: 'เมื่อทำการเข้าสู่ระบบเสร็จสิ้น คุณยอมรับข้อกำหนดการใช้บริการและนโยบายความเป็นส่วนตัวของเรา',
+        securityWarning: 'หากคุณไม่ได้พยายามเข้าสู่ระบบแต่ได้รับอีเมลนี้ คุณสามารถเพิกเฉยได้อย่างปลอดภัย จะไม่มีบัญชีใดถูกเข้าสู่ระบบ ห้ามแชร์หรือส่งต่อรหัส 6 หลักนี้ ทีมบริการลูกค้าของเราจะไม่ขอรหัสนี้',
     },
 };
 

@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 
 // Supported languages
-export type Language = 'en' | 'es' | 'zh' | 'hi' | 'pt' | 'fr' | 'de' | 'ja' | 'ko' | 'ar';
+export type Language = 'en' | 'es' | 'zh_CN' | 'hi' | 'pt' | 'fr' | 'de' | 'ja' | 'ko' | 'ar' | 'ca' | 'id' | 'ms' | 'pl' | 'es_419' | 'th' | 'zh_TW';
 
 export interface LanguageInfo {
     code: Language;
@@ -16,13 +16,20 @@ export interface LanguageInfo {
 export const LANGUAGES: LanguageInfo[] = [
     { code: 'en', name: 'English', nativeName: 'English', flag: '🇺🇸', rtl: false },
     { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸', rtl: false },
-    { code: 'zh', name: 'Chinese', nativeName: '中文', flag: '🇨🇳', rtl: false },
-    { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳', rtl: false },
+    { code: 'es_419', name: 'Spanish (LATAM)', nativeName: 'Español (Latinoamérica)', flag: '🇲🇽', rtl: false },
     { code: 'pt', name: 'Portuguese', nativeName: 'Português', flag: '🇧🇷', rtl: false },
     { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷', rtl: false },
     { code: 'de', name: 'German', nativeName: 'Deutsch', flag: '🇩🇪', rtl: false },
+    { code: 'ca', name: 'Catalan', nativeName: 'Català', flag: '🇪🇸', rtl: false },
+    { code: 'pl', name: 'Polish', nativeName: 'Polski', flag: '🇵🇱', rtl: false },
+    { code: 'zh_CN', name: 'Chinese (Simplified)', nativeName: '简体中文', flag: '🇨🇳', rtl: false },
+    { code: 'zh_TW', name: 'Chinese (Traditional)', nativeName: '繁體中文', flag: '🇹🇼', rtl: false },
     { code: 'ja', name: 'Japanese', nativeName: '日本語', flag: '🇯🇵', rtl: false },
     { code: 'ko', name: 'Korean', nativeName: '한국어', flag: '🇰🇷', rtl: false },
+    { code: 'th', name: 'Thai', nativeName: 'ไทย', flag: '🇹🇭', rtl: false },
+    { code: 'id', name: 'Indonesian', nativeName: 'Bahasa Indonesia', flag: '🇮🇩', rtl: false },
+    { code: 'ms', name: 'Malay', nativeName: 'Bahasa Melayu', flag: '🇲🇾', rtl: false },
+    { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳', rtl: false },
     { code: 'ar', name: 'Arabic', nativeName: 'العربية', flag: '🇸🇦', rtl: true },
 ];
 
@@ -314,7 +321,9 @@ export interface Translations {
 // Import translations
 import { en } from './translations/en';
 import { es } from './translations/es';
-import { zh } from './translations/zh';
+import { es_419 } from './translations/es_419';
+import { zh_CN } from './translations/zh_CN';
+import { zh_TW } from './translations/zh_TW';
 import { hi } from './translations/hi';
 import { pt } from './translations/pt';
 import { fr } from './translations/fr';
@@ -322,9 +331,14 @@ import { de } from './translations/de';
 import { ja } from './translations/ja';
 import { ko } from './translations/ko';
 import { ar } from './translations/ar';
+import { ca } from './translations/ca';
+import { id } from './translations/id';
+import { ms } from './translations/ms';
+import { pl } from './translations/pl';
+import { th } from './translations/th';
 
 const translations: Record<Language, Translations> = {
-    en, es, zh, hi, pt, fr, de, ja, ko, ar
+    en, es, es_419, pt, fr, de, ca, pl, zh_CN, zh_TW, ja, ko, th, id, ms, hi, ar
 };
 
 // Context

@@ -170,6 +170,9 @@ export default function AdminTicketsPage() {
                         <Link href="/admin" className="px-3 py-2 bg-zinc-800 rounded-lg text-sm hover:bg-zinc-700">
                             ← Dashboard
                         </Link>
+                        <Link href="/admin/notifications" className="px-3 py-2 bg-zinc-800 rounded-lg text-sm hover:bg-zinc-700">
+                            📢 Notificaciones
+                        </Link>
                     </div>
                 </div>
 

@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { AnimatedButton, ModalBackdrop, ModalContent, FadeIn, Pressable } from '../ui/Motion';
 import AboutModal from './AboutModal';
 import HelpModal from './HelpModal';
-import { useI18n } from '@/lib/i18n';
+import { useI18n, type Language } from '@/lib/i18n';
 import { useNotifications } from '@/hooks/useNotifications';
 
 interface SettingsModalProps {
@@ -120,7 +120,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     ];
 
     const handleLanguageSelect = (langCode: string) => {
-        setLang(langCode as 'en' | 'es' | 'zh' | 'hi' | 'pt' | 'fr' | 'de' | 'ja' | 'ko' | 'ar');
+        setLang(langCode as Language);
         setShowLanguageDropdown(false);
     };
 

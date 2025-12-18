@@ -204,6 +204,12 @@ export default function AdminDashboard() {
                         <p className="text-zinc-400 mt-1">OrbId Wallet Metrics</p>
                     </div>
                     <div className="flex items-center gap-3">
+                        <a href="/admin/tickets" className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl transition-colors flex items-center gap-2">
+                            🎫 Tickets
+                        </a>
+                        <a href="/admin/notifications" className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl transition-colors flex items-center gap-2">
+                            📢 Notificaciones
+                        </a>
                         <button
                             onClick={logout}
                             className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 rounded-xl transition-colors flex items-center gap-2"

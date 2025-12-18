@@ -1,6 +1,6 @@
 import type { Translations } from '../i18n';
 
-export const zh: Translations = {
+export const zh_CN: Translations = {
     nav: {
         wallet: '钱包',
         activity: '活动',
