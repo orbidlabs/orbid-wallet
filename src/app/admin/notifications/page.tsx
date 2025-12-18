@@ -54,6 +54,7 @@ export default function AdminNotificationsPage() {
     // UI state
     const [showPreview, setShowPreview] = useState(false);
     const [sending, setSending] = useState(false);
+    const [translating, setTranslating] = useState(false);
     const [result, setResult] = useState<{ success: boolean; message: string; details?: Record<string, unknown> } | null>(null);
 
     // Keep password ref updated
@@ -91,27 +92,65 @@ export default function AdminNotificationsPage() {
     };
 
     // Generate translations when base content or languages change
-    const generateTranslations = useCallback(() => {
-        const newTranslations: Translation[] = [];
-
-        selectedLanguages.forEach(lang => {
-            // For now, use the English version as base
-            // User can edit each translation in the preview
-            newTranslations.push({
-                language: lang,
-                title: baseTitle,
-                message: baseMessage,
+    const generateTranslations = useCallback(async () => {
+        setTranslating(true);
+        try {
+            const targetLangs = Array.from(selectedLanguages);
+            const res = await fetch('/api/admin/translate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${passwordRef.current}`
+                },
+                body: JSON.stringify({
+                    title: baseTitle,
+                    message: baseMessage,
+                    targetLanguages: targetLangs
+                })
             });
-        });
 
-        setTranslations(newTranslations);
+            if (res.ok) {
+                const data = await res.json();
+                const newTranslations: Translation[] = [];
+
+                targetLangs.forEach(lang => {
+                    const trans = data.translations[lang] || { title: baseTitle, message: baseMessage };
+                    newTranslations.push({
+                        language: lang,
+                        title: trans.title,
+                        message: trans.message,
+                    });
+                });
+                setTranslations(newTranslations);
+            } else {
+                // Fallback if API fails
+                const newTranslations: Translation[] = [];
+                selectedLanguages.forEach(lang => {
+                    newTranslations.push({
+                        language: lang,
+                        title: baseTitle,
+                        message: baseMessage,
+                    });
+                });
+                setTranslations(newTranslations);
+            }
+        } catch (error) {
+            console.error('Translation error:', error);
+        } finally {
+            setTranslating(false);
+        }
     }, [selectedLanguages, baseTitle, baseMessage]);
 
-    useEffect(() => {
-        if (showPreview) {
-            generateTranslations();
+    const toggleAllLanguages = () => {
+        const allCodes = SUPPORTED_LANGUAGES.map(l => l.code);
+        const isAllSelected = selectedLanguages.size === allCodes.length;
+
+        if (isAllSelected) {
+            setSelectedLanguages(new Set(['en']));
+        } else {
+            setSelectedLanguages(new Set(allCodes));
         }
-    }, [showPreview, generateTranslations]);
+    };
 
     const toggleLanguage = (lang: LanguageCode) => {
         const newSelected = new Set(selectedLanguages);
@@ -124,10 +163,6 @@ export default function AdminNotificationsPage() {
             newSelected.add(lang);
         }
         setSelectedLanguages(newSelected);
-    };
-
-    const selectAllLanguages = () => {
-        setSelectedLanguages(new Set(SUPPORTED_LANGUAGES.map(l => l.code)));
     };
 
     const selectNone = () => {
@@ -380,16 +415,20 @@ export default function AdminNotificationsPage() {
 
                                     <div className="flex gap-2 mb-4">
                                         <button
-                                            onClick={selectAllLanguages}
-                                            className="px-3 py-1 text-sm bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
+                                            onClick={toggleAllLanguages}
+                                            className="px-4 py-1.5 text-sm bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg transition-colors flex items-center gap-2"
                                         >
-                                            Select All
-                                        </button>
-                                        <button
-                                            onClick={selectNone}
-                                            className="px-3 py-1 text-sm bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
-                                        >
-                                            English Only
+                                            {selectedLanguages.size === SUPPORTED_LANGUAGES.length ? (
+                                                <>
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                                    Deselect All
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                                    Select All
+                                                </>
+                                            )}
                                         </button>
                                     </div>
 
@@ -421,11 +460,23 @@ export default function AdminNotificationsPage() {
 
                                 {/* Continue Button */}
                                 <button
-                                    onClick={() => setShowPreview(true)}
-                                    disabled={!baseTitle || !baseMessage || !walletAddresses}
-                                    className="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+                                    onClick={async () => {
+                                        setShowPreview(true);
+                                        await generateTranslations();
+                                    }}
+                                    disabled={!baseTitle || !baseMessage || !walletAddresses || translating}
+                                    className="w-full py-4 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-all flex items-center justify-center gap-3 shadow-lg shadow-pink-500/20"
                                 >
-                                    Preview Translations →
+                                    {translating ? (
+                                        <>
+                                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            Translating...
+                                        </>
+                                    ) : (
+                                        <>
+                                            ✨ Preview Translations →
+                                        </>
+                                    )}
                                 </button>
                             </>
                         ) : (
