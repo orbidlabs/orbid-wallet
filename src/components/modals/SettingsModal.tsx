@@ -218,7 +218,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                                             <Image src="/logo.svg" alt="OrbId" width={40} height={40} />
                                             <div>
                                                 <h3 className="text-white font-bold">OrbId Wallet</h3>
-                                                <p className="text-xs text-zinc-500">{t.settings.version} 1.0.0</p>
+                                                <p className="text-xs text-zinc-500">{t.settings.version} 1.0.1</p>
                                             </div>
                                         </div>
                                         <p className="text-sm text-zinc-400">
