@@ -526,10 +526,73 @@ export async function POST(request: NextRequest) {
     }
 }
 
-/** GET - List tickets (admin) */
+const FAQs = [
+    {
+        question_en: "How do I verify my World ID?",
+        answer_en: "Go to the 'Verify' tab in the app and follow the instructions to connect with World App.",
+        question_es: "¿Cómo verifico mi World ID?",
+        answer_es: "Ve a la pestaña 'Verificar' en la app y sigue las instrucciones para conectar con World App."
+    },
+    {
+        question_en: "Is my wallet secure?",
+        answer_en: "Yes, OrbId Wallet is non-custodial. You own your private keys via World ID authentication.",
+        question_es: "¿Es segura mi billetera?",
+        answer_es: "Sí, OrbId Wallet no tiene custodia. Tú eres dueño de tus claves privadas mediante autenticación World ID."
+    },
+    {
+        question_en: "How long do deposits take?",
+        answer_en: "Deposits usually arrive within minutes, depending on network congestion (Optimism/World Chain).",
+        question_es: "¿Cuánto tardan los depósitos?",
+        answer_es: "Los depósitos suelen llegar en minutos, dependiendo de la congestión de la red (Optimism/World Chain)."
+    }
+];
+
+// GET: Retrieve user tickets or check status
 export async function GET(request: NextRequest) {
-    const token = request.headers.get('Authorization')?.replace('Bearer ', '');
-    if (token !== ADMIN_SECRET) {
+    const auth = request.headers.get('authorization');
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get('type');
+
+    // Public: Get FAQs
+    if (type === 'faq') {
+        // In future: await supabaseAdmin.from('faqs').select('*').eq('is_active', true);
+        return NextResponse.json({ faqs: FAQs });
+    }
+
+    // Public: Check Ticket Status (Rate limited conceptually)
+    if (type === 'status') {
+        const ticketId = searchParams.get('id');
+        const email = searchParams.get('email');
+
+        if (!ticketId || !email) {
+            return NextResponse.json({ error: 'Missing credentials' }, { status: 400 });
+        }
+
+        const supabase = getSupabase();
+        if (!supabase) {
+            return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+        }
+
+        const { data, error } = await supabase
+            .from('support_tickets')
+            .select('status, updated_at, admin_reply')
+            .eq('ticket_id', ticketId) // Use public ticket_id (e.g. T-1234)
+            .eq('email', email)        // strict check
+            .single();
+
+        if (error || !data) {
+            return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
+        }
+
+        return NextResponse.json({
+            status: data.status,
+            updatedAt: data.updated_at,
+            lastReply: data.status === 'resolved' || data.admin_reply ? data.admin_reply : null
+        });
+    }
+
+    // Admin: List all tickets
+    if (auth !== `Bearer ${process.env.ADMIN_SECRET}`) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

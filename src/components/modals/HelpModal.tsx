@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AnimatedButton, ModalBackdrop, ModalContent, FadeIn, Pressable } from '../ui/Motion';
 import { useToast } from '@/lib/ToastContext';
@@ -12,11 +12,17 @@ interface HelpModalProps {
 }
 
 type Topic = 'general' | 'transactions' | 'account' | 'security' | 'other';
-type View = 'topics' | 'form' | 'success';
+type View = 'topics' | 'form' | 'success' | 'status-check' | 'status-result';
+
+interface TicketStatus {
+    status: 'new' | 'in-progress' | 'resolved' | 'closed';
+    updatedAt: string;
+    lastReply: string | null;
+}
 
 export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
     const { showToast } = useToast();
-    const { t } = useI18n();
+    const { t, lang } = useI18n();
     const [view, setView] = useState<View>('topics');
     const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
     const [email, setEmail] = useState('');
@@ -25,6 +31,53 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
     const [attachments, setAttachments] = useState<File[]>([]);
     const [uploadedUrls, setUploadedUrls] = useState<string[]>([]);
     const [isUploading, setIsUploading] = useState(false);
+
+    // Status Check State
+    const [ticketId, setTicketId] = useState('');
+    const [ticketStatus, setTicketStatus] = useState<TicketStatus | null>(null);
+
+    // Dynamic FAQs State
+    const [dynamicFaqs, setDynamicFaqs] = useState<{ qKey?: any, aKey?: any, question?: string, answer?: string }[]>([]);
+    const [isLoadingFaqs, setIsLoadingFaqs] = useState(false);
+
+    // Load FAQs on mount
+    useEffect(() => {
+        if (isOpen) {
+            setIsLoadingFaqs(true);
+            fetch('/api/support?type=faq')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.faqs) {
+                        setDynamicFaqs(data.faqs.map((f: any) => ({
+                            question: lang === 'es' ? f.question_es : f.question_en,
+                            answer: lang === 'es' ? f.answer_es : f.answer_en
+                        })));
+                    }
+                })
+                .catch(err => console.error("Failed to load FAQs", err))
+                .finally(() => setIsLoadingFaqs(false));
+        }
+    }, [isOpen, lang]);
+
+    const handleCheckStatus = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        try {
+            const res = await fetch(`/api/support?type=status&id=${ticketId}&email=${email}`);
+            if (res.ok) {
+                const data = await res.json();
+                setTicketStatus(data);
+                setView('status-result');
+            } else {
+                showToast({ type: 'error', title: 'Error', message: 'Ticket not found or invalid email' });
+            }
+        } catch {
+            showToast({ type: 'error', title: 'Error', message: 'Connection error' });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
 
     const topics: { id: Topic; labelKey: keyof typeof t.help; icon: string; descKey: keyof typeof t.help }[] = [
         { id: 'general', labelKey: 'topicGeneral', icon: '❓', descKey: 'topicGeneralDesc' },
@@ -203,20 +256,43 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
                                             <div>
                                                 <h3 className="text-white font-semibold mb-3">{t.help.faqTitle}</h3>
                                                 <div className="space-y-2">
-                                                    {faqs.map((faq, index) => (
-                                                        <motion.div
-                                                            key={faq.qKey}
-                                                            initial={{ opacity: 0, y: 10 }}
-                                                            animate={{ opacity: 1, y: 0 }}
-                                                            transition={{ delay: index * 0.05 }}
-                                                            className="glass rounded-xl p-3"
-                                                        >
-                                                            <p className="text-white text-sm font-medium mb-1">{t.help[faq.qKey]}</p>
-                                                            <p className="text-zinc-500 text-xs">{t.help[faq.aKey]}</p>
-                                                        </motion.div>
-                                                    ))}
+                                                    {isLoadingFaqs ? (
+                                                        <p className="text-zinc-500 text-xs">Loading...</p>
+                                                    ) : dynamicFaqs.length > 0 ? (
+                                                        dynamicFaqs.map((faq, index) => (
+                                                            <motion.div
+                                                                key={index}
+                                                                initial={{ opacity: 0, y: 10 }}
+                                                                animate={{ opacity: 1, y: 0 }}
+                                                                transition={{ delay: index * 0.05 }}
+                                                                className="glass rounded-xl p-3"
+                                                            >
+                                                                <p className="text-white text-sm font-medium mb-1">{faq.question}</p>
+                                                                <p className="text-zinc-500 text-xs">{faq.answer}</p>
+                                                            </motion.div>
+                                                        ))
+                                                    ) : (
+                                                        <p className="text-zinc-500 text-xs">No FAQs available</p>
+                                                    )}
                                                 </div>
                                             </div>
+                                        </FadeIn>
+
+                                        {/* Status Check Button */}
+                                        <FadeIn delay={0.1}>
+                                            <Pressable
+                                                onClick={() => setView('status-check')}
+                                                className="w-full flex items-center gap-3 p-3 glass rounded-xl border border-pink-500/20 bg-pink-500/5 hover:bg-pink-500/10"
+                                            >
+                                                <span className="text-2xl">🔍</span>
+                                                <div className="flex-1">
+                                                    <p className="text-white font-medium text-sm">Check Ticket Status</p>
+                                                    <p className="text-zinc-500 text-xs">See updates on your support request</p>
+                                                </div>
+                                                <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                </svg>
+                                            </Pressable>
                                         </FadeIn>
 
                                         {/* Contact Topics */}
@@ -411,6 +487,93 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
                                         <p className="text-zinc-500 mb-6">{t.help.responseTime}</p>
                                         <AnimatedButton variant="glass" fullWidth onClick={handleClose}>
                                             {t.common.done}
+                                        </AnimatedButton>
+                                    </motion.div>
+                                )}
+
+                                {/* Status Check View */}
+                                {view === 'status-check' && (
+                                    <motion.form
+                                        key="status-check"
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: 20 }}
+                                        onSubmit={handleCheckStatus}
+                                        className="space-y-4"
+                                    >
+                                        <div className="text-center mb-6">
+                                            <h3 className="text-lg font-bold text-white">Check Ticket Status</h3>
+                                            <p className="text-zinc-500 text-xs">Enter your details to track your request</p>
+                                        </div>
+
+                                        <div>
+                                            <label className="text-xs text-zinc-500 mb-1.5 block">Ticket ID (e.g. T-123498)</label>
+                                            <input
+                                                type="text"
+                                                value={ticketId}
+                                                onChange={(e) => setTicketId(e.target.value)}
+                                                placeholder="T-..."
+                                                required
+                                                className="w-full px-4 py-3 rounded-xl bg-black/30 border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:border-pink-500/50 transition-colors uppercase"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="text-xs text-zinc-500 mb-1.5 block">{t.help.yourEmail}</label>
+                                            <input
+                                                type="email"
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
+                                                placeholder="your@email.com"
+                                                required
+                                                className="w-full px-4 py-3 rounded-xl bg-black/30 border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:border-pink-500/50 transition-colors"
+                                            />
+                                        </div>
+
+                                        <AnimatedButton
+                                            type="submit"
+                                            variant="gradient"
+                                            fullWidth
+                                            disabled={isSubmitting || !ticketId || !email}
+                                            className="disabled:opacity-50"
+                                        >
+                                            {isSubmitting ? 'Checking...' : 'Check Status'}
+                                        </AnimatedButton>
+                                    </motion.form>
+                                )}
+
+                                {/* Status Result View */}
+                                {view === 'status-result' && ticketStatus && (
+                                    <motion.div
+                                        key="status-result"
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        className="space-y-6 text-center"
+                                    >
+                                        <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center ${ticketStatus.status === 'resolved' ? 'bg-emerald-500/20 text-emerald-400' :
+                                            ticketStatus.status === 'in-progress' ? 'bg-yellow-500/20 text-yellow-400' :
+                                                'bg-blue-500/20 text-blue-400'
+                                            }`}>
+                                            <span className="text-3xl">
+                                                {ticketStatus.status === 'resolved' ? '✅' :
+                                                    ticketStatus.status === 'in-progress' ? '🚧' : '📩'}
+                                            </span>
+                                        </div>
+
+                                        <div>
+                                            <h3 className="text-white font-bold text-lg capitalize mb-1">{ticketStatus.status.replace('-', ' ')}</h3>
+                                            <p className="text-zinc-500 text-xs">Last updated {new Date(ticketStatus.updatedAt).toLocaleDateString()}</p>
+                                        </div>
+
+                                        {ticketStatus.lastReply && (
+                                            <div className="bg-zinc-800/50 rounded-xl p-4 text-left border border-white/5">
+                                                <p className="text-xs text-zinc-500 uppercase tracking-wider mb-2">Latest Update</p>
+                                                <p className="text-sm text-zinc-300 whitespace-pre-wrap">{ticketStatus.lastReply}</p>
+                                            </div>
+                                        )}
+
+                                        <AnimatedButton variant="glass" fullWidth onClick={() => setView('topics')}>
+                                            Back to Help
                                         </AnimatedButton>
                                     </motion.div>
                                 )}
