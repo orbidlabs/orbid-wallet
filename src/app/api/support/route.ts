@@ -55,31 +55,27 @@ function getLanguage(request: NextRequest): string {
     return acceptLang.startsWith('es') ? 'es' : 'en';
 }
 
-/** Helper to send email via Cloudflare Worker */
-async function sendEmailViaWorker(email: string, subject: string, html: string, from?: string, fromName?: string) {
-    const workerUrl = process.env.MAILER_WORKER_URL;
-    const secret = process.env.MAILER_SECRET;
-    if (!workerUrl || !secret) {
-        console.error('Mailer environment variables missing (MAILER_WORKER_URL or MAILER_SECRET)');
+/** Helper to send email via Brevo */
+async function sendEmailViaBREVO(email: string, subject: string, html: string) {
+    const apiKey = process.env.BREVO_API_KEY;
+    const senderEmail = process.env.BREVO_SENDER_EMAIL || 'support@mail.orbidwallet.com';
+    if (!apiKey) {
+        console.error('Brevo API key missing');
         return;
     }
 
     try {
-        await fetch(workerUrl, {
+        await fetch('https://api.brevo.com/v3/smtp/email', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${secret}`
-            },
+            headers: { 'accept': 'application/json', 'api-key': apiKey, 'content-type': 'application/json' },
             body: JSON.stringify({
-                to: email,
+                sender: { name: 'OrbId Wallet Support', email: senderEmail },
+                to: [{ email }],
                 subject,
-                htmlContent: html,
-                from: from || 'support@mail.orbidwallet.com',
-                fromName: fromName || 'OrbId Wallet Support'
+                htmlContent: html
             })
         });
-    } catch (e) { console.error('Worker Email error:', e); }
+    } catch (e) { console.error('Brevo Email error:', e); }
 }
 
 /** Send confirmation email */
@@ -204,7 +200,7 @@ async function sendConfirmationEmail(email: string, ticketId: string, topic: str
 </html>`;
 
     const subject = lang === 'es' ? `Ticket #${ticketId} - Recibido` : `Ticket #${ticketId} - Received`;
-    await sendEmailViaWorker(email, subject, html, 'support@mail.orbidwallet.com', 'OrbId Wallet Support');
+    await sendEmailViaBREVO(email, subject, html);
 }
 
 /** Send resolved email */
@@ -326,7 +322,7 @@ async function sendResolvedEmail(email: string, ticketId: string, adminReply: st
 </html>`;
 
     const subject = lang === 'es' ? `Ticket #${ticketId} - Resuelto ✓` : `Ticket #${ticketId} - Resolved ✓`;
-    await sendEmailViaWorker(email, subject, html, 'support@mail.orbidwallet.com', 'OrbId Wallet Support');
+    await sendEmailViaBREVO(email, subject, html);
 }
 
 /** Send reply email (for in-progress tickets) */
@@ -457,7 +453,7 @@ async function sendReplyEmail(email: string, ticketId: string, replyMessage: str
 </html>`;
 
     const subject = lang === 'es' ? `Re: Ticket ${ticketId}` : `Re: Ticket ${ticketId}`;
-    await sendEmailViaWorker(email, subject, html, 'support@mail.orbidwallet.com', 'OrbId Wallet Support');
+    await sendEmailViaBREVO(email, subject, html);
 }
 
 
