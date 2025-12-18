@@ -10,7 +10,7 @@ interface DashboardStats {
     totalLogins: number;
     countries: { country: string; count: number }[];
     cities: { city: string; count: number }[];
-    growth: { date: string; count: number }[];
+    growth: { date: string; count: number; total: number }[];
     devices: { device: string; count: number }[];
     browsers: { browser: string; count: number }[];
     os: { os: string; count: number }[];
@@ -85,6 +85,12 @@ export default function AdminDashboard() {
             setError('Connection error');
         }
         setLoading(false);
+    };
+
+    const logout = () => {
+        setAuthenticated(false);
+        setPassword('');
+        passwordRef.current = '';
     };
 
     // Login Screen
@@ -164,14 +170,23 @@ export default function AdminDashboard() {
                         <h1 className="text-2xl md:text-3xl font-bold text-white">Analytics Dashboard</h1>
                         <p className="text-zinc-400 mt-1">OrbId Wallet Metrics</p>
                     </div>
-                    <button
-                        onClick={loadStats}
-                        disabled={refreshing}
-                        className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl transition-colors disabled:opacity-50 flex items-center gap-2"
-                    >
-                        <RefreshIcon className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-                        {refreshing ? 'Loading...' : 'Refresh'}
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={logout}
+                            className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 rounded-xl transition-colors flex items-center gap-2"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" /></svg>
+                            Logout
+                        </button>
+                        <button
+                            onClick={loadStats}
+                            disabled={refreshing}
+                            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl transition-colors disabled:opacity-50 flex items-center gap-2"
+                        >
+                            <RefreshIcon className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                            {refreshing ? 'Loading...' : 'Refresh'}
+                        </button>
+                    </div>
                 </div>
 
                 {/* Stats Cards */}
@@ -209,26 +224,37 @@ export default function AdminDashboard() {
                     <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-800 rounded-2xl p-4 md:p-6">
                         <div className="flex items-center gap-2 mb-4">
                             <ChartIcon className="w-5 h-5 text-pink-400" />
-                            <h2 className="text-lg font-semibold text-white">User Growth (30 Days)</h2>
+                            <h2 className="text-lg font-semibold text-white">User Growth (Cumulative)</h2>
                         </div>
-                        <div className="h-48 flex items-end gap-0.5">
-                            {(stats?.growth || []).slice(-30).map((day, i) => (
-                                <div
-                                    key={i}
-                                    className="flex-1 flex flex-col items-center gap-1"
-                                >
+                        <div className="h-48 flex items-end gap-0.5 w-full relative group">
+                            {(stats?.growth || []).map((day, i, arr) => {
+                                const maxTotal = arr[arr.length - 1]?.total || 1;
+                                const heightPercent = (day.total / maxTotal) * 100;
+                                return (
                                     <div
-                                        className="w-full bg-gradient-to-t from-pink-500 to-purple-500 rounded-t hover:opacity-80 transition-opacity cursor-pointer"
-                                        style={{ height: '100%' }}
-                                        title={`${day.date}: ${day.count} users`}
-                                    />
-                                    {i % 7 === 0 && (
-                                        <span className="text-[9px] text-zinc-500">
-                                            {new Date(day.date).getDate()}
-                                        </span>
-                                    )}
+                                        key={i}
+                                        className="flex-1 flex flex-col items-center gap-1 group/bar relative"
+                                    >
+                                        <div
+                                            className="w-full bg-gradient-to-t from-pink-500/50 to-purple-500/50 hover:from-pink-500 hover:to-purple-500 transition-colors rounded-t"
+                                            style={{ height: `${heightPercent}%`, minHeight: '4px' }}
+                                        >
+                                            <div className="opacity-0 group-hover/bar:opacity-100 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-zinc-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10 pointer-events-none border border-zinc-700">
+                                                {day.date}: {day.total} users (+{day.count})
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                            {(!stats?.growth || stats.growth.length === 0) && (
+                                <div className="absolute inset-0 flex items-center justify-center text-zinc-500">
+                                    No growth data
                                 </div>
-                            ))}
+                            )}
+                        </div>
+                        <div className="flex justify-between mt-2 text-xs text-zinc-500">
+                            <span>{stats?.growth?.[0]?.date || ''}</span>
+                            <span>{stats?.growth?.[stats.growth.length - 1]?.date || ''}</span>
                         </div>
                     </div>
 
@@ -238,8 +264,8 @@ export default function AdminDashboard() {
                             <GlobeIcon className="w-5 h-5 text-cyan-400" />
                             <h2 className="text-lg font-semibold text-white">Top Countries</h2>
                         </div>
-                        <div className="space-y-2">
-                            {(stats?.countries || []).slice(0, 6).map((country, i) => (
+                        <div className="space-y-2 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
+                            {(stats?.countries || []).map((country, i) => (
                                 <div
                                     key={i}
                                     className="flex items-center gap-3"
@@ -267,8 +293,8 @@ export default function AdminDashboard() {
                             <LocationIcon className="w-5 h-5 text-rose-400" />
                             <h2 className="text-lg font-semibold text-white">Top Cities</h2>
                         </div>
-                        <div className="space-y-2">
-                            {(stats?.cities || []).slice(0, 6).map((city, i) => (
+                        <div className="space-y-2 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
+                            {(stats?.cities || []).map((city, i) => (
                                 <div
                                     key={i}
                                     className="flex items-center gap-3"

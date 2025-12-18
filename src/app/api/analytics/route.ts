@@ -101,13 +101,10 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ cities });
         }
         if (stat === 'growth') {
-            const thirtyDaysAgo = new Date();
-            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
             const { data } = await supabaseAdmin
                 .from('analytics_users')
                 .select('created_at')
-                .gte('created_at', thirtyDaysAgo.toISOString());
+                .order('created_at', { ascending: true });
 
             const dateMap: Record<string, number> = {};
             (data || []).forEach((row: { created_at: string }) => {
@@ -115,13 +112,21 @@ export async function GET(request: NextRequest) {
                 dateMap[date] = (dateMap[date] || 0) + 1;
             });
 
-            // Fill in missing days with 0
             const growth = [];
-            for (let i = 29; i >= 0; i--) {
-                const d = new Date();
-                d.setDate(d.getDate() - i);
-                const dateStr = d.toISOString().split('T')[0];
-                growth.push({ date: dateStr, count: dateMap[dateStr] || 0 });
+            let cumulative = 0;
+            const dates = Object.keys(dateMap).sort();
+
+            // Fill gaps if needed, or just map existing days
+            if (dates.length > 0) {
+                const startDate = new Date(dates[0]);
+                const endDate = new Date();
+
+                for (let d = startDate; d <= endDate; d.setDate(d.getDate() + 1)) {
+                    const dateStr = d.toISOString().split('T')[0];
+                    const dailyCount = dateMap[dateStr] || 0;
+                    cumulative += dailyCount;
+                    growth.push({ date: dateStr, count: dailyCount, total: cumulative });
+                }
             }
 
             return NextResponse.json({ growth });
