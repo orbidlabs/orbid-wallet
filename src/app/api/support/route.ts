@@ -58,7 +58,7 @@ function getLanguage(request: NextRequest): string {
 /** Helper to send email via Brevo */
 async function sendEmailViaBREVO(email: string, subject: string, html: string) {
     const apiKey = process.env.BREVO_API_KEY;
-    const senderEmail = process.env.BREVO_SENDER_EMAIL || 'support@mail.orbidwallet.com';
+    const senderEmail = 'support@mail.orbidwallet.com';
     if (!apiKey) {
         console.error('Brevo API key missing');
         return;

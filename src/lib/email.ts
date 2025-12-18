@@ -12,8 +12,8 @@ interface SendEmailOptions {
 
 export async function sendEmail({ to, subject, htmlContent }: SendEmailOptions): Promise<boolean> {
     const apiKey = process.env.BREVO_API_KEY;
-    const senderEmail = process.env.BREVO_SENDER_EMAIL || 'no-reply@mail.orbidwallet.com';
-    const senderName = process.env.BREVO_SENDER_NAME || 'OrbId Wallet';
+    const senderEmail = 'no-reply@mail.orbidwallet.com';
+    const senderName = 'OrbId Wallet';
 
     if (!apiKey) {
         console.error('Brevo not configured: missing API key');
