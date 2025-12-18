@@ -62,6 +62,22 @@ export async function POST(request: NextRequest) {
         const formattedPath = miniAppPath.startsWith('/') ? miniAppPath : `/${miniAppPath}`;
         const deepLinkPath = `worldapp://mini-app?app_id=${appId}&path=${encodeURIComponent(formattedPath)}`;
 
+        const payload = {
+            app_id: appId,
+            wallet_addresses: walletAddresses,
+            localisations: localisations.map(l => ({
+                language: l.language,
+                title: l.title,
+                message: l.message,
+            })),
+            mini_app_path: deepLinkPath,
+        };
+
+        console.log('Sending notification to World App API:', JSON.stringify({
+            ...payload,
+            api_key: apiKey ? `${apiKey.slice(0, 5)}...${apiKey.slice(-5)}` : 'MISSING'
+        }, null, 2));
+
         // Send to World App API
         const response = await fetch('https://developer.worldcoin.org/api/v2/minikit/send-notification', {
             method: 'POST',
@@ -69,28 +85,21 @@ export async function POST(request: NextRequest) {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${apiKey}`,
             },
-            body: JSON.stringify({
-                app_id: appId,
-                wallet_addresses: walletAddresses,
-                localisations: localisations.map(l => ({
-                    language: l.language,
-                    title: l.title,
-                    message: l.message,
-                })),
-                mini_app_path: deepLinkPath,
-            }),
+            body: JSON.stringify(payload),
         });
 
         const data = await response.json().catch(() => ({}));
 
         if (!response.ok) {
-            console.error('World App API error:', response.status, data);
+            console.error('World App API error status:', response.status);
+            console.error('World App API error details:', JSON.stringify(data, null, 2));
             return NextResponse.json(
                 { error: 'Failed to send notification', details: data },
                 { status: response.status }
             );
         }
 
+        console.log('World App API success:', JSON.stringify(data, null, 2));
         return NextResponse.json({ success: true, data });
 
     } catch (error) {

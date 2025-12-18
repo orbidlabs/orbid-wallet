@@ -209,7 +209,7 @@ export default function AdminNotificationsPage() {
             batches.push(addresses.slice(i, i + BATCH_SIZE));
         }
 
-        const results: { batch: number; success: boolean; data?: Record<string, unknown>; error?: string }[] = [];
+        const results: { batch: number; success: boolean; data?: Record<string, unknown>; error?: string; details?: any }[] = [];
         let successCount = 0;
         let failCount = 0;
 
@@ -243,7 +243,7 @@ export default function AdminNotificationsPage() {
                         results.push({ batch: i + 1, success: true, data });
                         successCount += batch.length;
                     } else {
-                        results.push({ batch: i + 1, success: false, error: data.error });
+                        results.push({ batch: i + 1, success: false, error: data.error, details: data.details });
                         failCount += batch.length;
                     }
                 } catch (error) {
