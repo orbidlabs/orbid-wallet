@@ -94,27 +94,28 @@ export const WORLD_CHAIN_TOKENS: Token[] = [
         decimals: 18,
         logoURI: 'https://assets.coingecko.com/coins/images/29850/standard/pepe-token.jpeg',
     },
-    {
-        symbol: 'SUSHI',
-        name: 'SUSHI Token',
-        address: '0xab09A728E53d3d6BC438BE95eeD46Da0Bbe7FB38',
-        decimals: 18,
-        logoURI: 'https://cdn.dexscreener.com/cms/images/f9f48364517fe80682254b9ffa038e7145eebf1e55b426fa146e625bd7933cd6?width=64&height=64&fit=crop&quality=95&format=auto',
-    },
-    {
-        symbol: 'PUF',
-        name: 'PUF',
-        address: '0x1aE3498f1B417fe31BE544B04B711F27Ba437bd3',
-        decimals: 18,
-        logoURI: 'https://cdn.dexscreener.com/cms/images/fd5244e6662f4c1330d10c293ed65bc5844f99342e2bc4db64d3154f5af665ad?width=64&height=64&fit=crop&quality=95&format=auto',
-    },
-    {
-        symbol: 'ORB',
-        name: 'ORB',
-        address: '0xF3F92A60e6004f3982F0FdE0d43602fC0a30a0dB',
-        decimals: 18,
-        logoURI: 'https://cdn.dexscreener.com/cms/images/6b364af0717941d3bbab268fd40e6eb424671813008662b76c16921e25bc1d27?width=64&height=64&fit=crop&quality=95&format=auto',
-    },
+    // TODO: Uncomment when added to developer portal
+    // {
+    //     symbol: 'SUSHI',
+    //     name: 'SUSHI Token',
+    //     address: '0xab09A728E53d3d6BC438BE95eeD46Da0Bbe7FB38',
+    //     decimals: 18,
+    //     logoURI: 'https://cdn.dexscreener.com/cms/images/f9f48364517fe80682254b9ffa038e7145eebf1e55b426fa146e625bd7933cd6?width=64&height=64&fit=crop&quality=95&format=auto',
+    // },
+    // {
+    //     symbol: 'PUF',
+    //     name: 'PUF',
+    //     address: '0x1aE3498f1B417fe31BE544B04B711F27Ba437bd3',
+    //     decimals: 18,
+    //     logoURI: 'https://cdn.dexscreener.com/cms/images/fd5244e6662f4c1330d10c293ed65bc5844f99342e2bc4db64d3154f5af665ad?width=64&height=64&fit=crop&quality=95&format=auto',
+    // },
+    // {
+    //     symbol: 'ORB',
+    //     name: 'ORB',
+    //     address: '0xF3F92A60e6004f3982F0FdE0d43602fC0a30a0dB',
+    //     decimals: 18,
+    //     logoURI: 'https://cdn.dexscreener.com/cms/images/6b364af0717941d3bbab268fd40e6eb424671813008662b76c16921e25bc1d27?width=64&height=64&fit=crop&quality=95&format=auto',
+    // },
 ];
 
 // CoinGecko IDs for price fetching
