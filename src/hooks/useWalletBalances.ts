@@ -67,9 +67,9 @@ async function getTokenPrices(): Promise<Record<string, TokenPrice>> {
                         );
 
                         if (pairs.length > 0) {
-                            // Sort by liquidity to get the most reliable price
+                            // Sort by liquidity to get THE most reliable and current price (matching DEX Screener)
                             const bestPair = pairs.sort((a: any, b: any) =>
-                                (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0)
+                                (parseFloat(b.liquidity?.usd || '0')) - (parseFloat(a.liquidity?.usd || '0'))
                             )[0];
 
                             prices[token.symbol] = {

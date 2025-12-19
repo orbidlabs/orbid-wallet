@@ -43,11 +43,15 @@ async function fetchMarketData(symbol: string, period: ChartPeriod): Promise<Tok
             const dexResponse = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${token.address}`);
             const dexData = await dexResponse.json();
 
-            // Find the best pair specifically on World Chain
-            const pair = dexData.pairs?.find((p: any) =>
+            // Find the best pair specifically on World Chain with highest liquidity
+            const pairs = dexData.pairs?.filter((p: any) =>
                 p.chainId === 'worldchain' &&
                 p.baseToken.address.toLowerCase() === token.address.toLowerCase()
-            ) || dexData.pairs?.[0];
+            ) || [];
+
+            const pair = pairs.sort((a: any, b: any) =>
+                (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0)
+            )[0] || dexData.pairs?.[0];
 
             if (pair) {
                 let priceHistory: PricePoint[] = [];
@@ -64,8 +68,16 @@ async function fetchMarketData(symbol: string, period: ChartPeriod): Promise<Tok
 
                         if (pool) {
                             const poolAddress = pool.attributes.address;
-                            const tf = period === '1d' ? 'hour' : 'day';
-                            const limit = period === '1d' ? 24 : (period === '7d' ? 7 : (period === '30d' ? 30 : 100));
+
+                            // Highly accurate timeframes & limits
+                            let tf = 'day';
+                            let limit = 30;
+
+                            if (period === '1d') { tf = 'hour'; limit = 24; }
+                            else if (period === '7d') { tf = 'hour'; limit = 168; } // 7 days * 24h
+                            else if (period === '30d') { tf = 'day'; limit = 30; }
+                            else if (period === '365d') { tf = 'day'; limit = 365; }
+                            else if (period === 'max') { tf = 'day'; limit = 1000; }
 
                             const ohlcvRes = await fetch(
                                 `https://api.geckoterminal.com/api/v2/networks/worldchain/pools/${poolAddress}/ohlcv/${tf}?limit=${limit}`,
@@ -88,7 +100,7 @@ async function fetchMarketData(symbol: string, period: ChartPeriod): Promise<Tok
                     console.warn(`GeckoTerminal chart fallback for ${symbol}`, ce);
                 }
 
-                // If GeckoTerminal failed, try CoinGecko for charts if we have an ID
+                // ... (CoinGecko chart fallback remains same)
                 if (priceHistory.length === 0 && geckoId) {
                     try {
                         const chartRes = await fetch(`https://api.coingecko.com/api/v3/coins/${geckoId}/market_chart?vs_currency=usd&days=${days}`);
@@ -105,10 +117,18 @@ async function fetchMarketData(symbol: string, period: ChartPeriod): Promise<Tok
                     }
                 }
 
+                // Calculate 7d change from history if possible
+                let change7d = 0;
+                if (priceHistory.length >= 7) {
+                    const latestPrice = priceHistory[priceHistory.length - 1].price;
+                    const oldPrice = priceHistory[0].price;
+                    change7d = ((latestPrice - oldPrice) / oldPrice) * 100;
+                }
+
                 return {
                     price: parseFloat(pair.priceUsd || '0'),
                     change24h: pair.priceChange?.h24 || 0,
-                    change7d: 0,
+                    change7d,
                     volume24h: pair.volume?.h24 || 0,
                     marketCap: pair.marketCap || 0,
                     fdv: pair.fdv || 0,
