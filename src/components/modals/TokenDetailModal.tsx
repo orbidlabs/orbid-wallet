@@ -95,17 +95,17 @@ export default function TokenDetailModal({ tokenBalance, isOpen, onClose, onSend
         if (!marketData?.priceHistory?.length) return null;
 
         const prices = marketData.priceHistory;
-        const minPrice = Math.min(...prices.map(p => p.price));
-        const maxPrice = Math.max(...prices.map(p => p.price));
+        const minPrice = Math.min(...prices.map((p: PricePoint) => p.price));
+        const maxPrice = Math.max(...prices.map((p: PricePoint) => p.price));
         const range = maxPrice - minPrice || 1;
 
-        const points = prices.map((p, i) => ({
+        const points = prices.map((p: PricePoint, i: number) => ({
             x: padding + (i / (prices.length - 1)) * (width - 2 * padding),
             y: height - padding - ((p.price - minPrice) / range) * (height - 2 * padding),
             data: p
         }));
 
-        const path = `M${points.map(p => `${p.x},${p.y}`).join(' L')}`;
+        const path = `M${points.map((p: { x: number, y: number }) => `${p.x},${p.y}`).join(' L')}`;
 
         return { points, path, minPrice, maxPrice };
     }, [marketData]);
@@ -325,7 +325,7 @@ export default function TokenDetailModal({ tokenBalance, isOpen, onClose, onSend
                                         {/* Point circle */}
                                         <circle
                                             cx={hoverX}
-                                            cy={chartData.points.find(p => p.data === hoveredPoint)?.y || 0}
+                                            cy={chartData.points.find((p: { data: PricePoint, y: number }) => p.data === hoveredPoint)?.y || 0}
                                             r="5"
                                             fill={chartColor}
                                             stroke="white"

@@ -47,44 +47,22 @@ async function getTokenPrices(): Promise<Record<string, TokenPrice>> {
     const prices: Record<string, TokenPrice> = {};
 
     try {
-        // 1. Fetch from CoinGecko for tokens with established IDs
-        const geckoSymbols = Object.keys(COINGECKO_IDS);
-        const geckoIds = Object.values(COINGECKO_IDS).join(',');
+        // 1. Fetch from DEX Screener for ALL World Chain tokens by address
+        // This is now our PRIMARY source for accuracy on World Chain
+        const allAddresses = WORLD_CHAIN_TOKENS.map(t => t.address).join(',');
 
-        const geckoResponse = await fetch(
-            `https://api.coingecko.com/api/v3/simple/price?ids=${geckoIds}&vs_currencies=usd&include_24hr_change=true`
-        );
-
-        if (geckoResponse.ok) {
-            const geckoData = await geckoResponse.json();
-            for (const symbol of geckoSymbols) {
-                const geckoId = COINGECKO_IDS[symbol];
-                if (geckoData[geckoId]) {
-                    prices[symbol] = {
-                        usd: geckoData[geckoId].usd || 0,
-                        usd_24h_change: geckoData[geckoId].usd_24h_change || 0
-                    };
-                }
-            }
-        }
-
-        // 2. Fetch from DEX Screener for tokens NOT in CoinGecko mapping
-        // This targets newer or less common World Chain tokens
-        const dexscreenerTokens = WORLD_CHAIN_TOKENS.filter(t => !COINGECKO_IDS[t.symbol]);
-        const dexscreenerAddresses = dexscreenerTokens.map(t => t.address).join(',');
-
-        if (dexscreenerAddresses) {
+        if (allAddresses) {
             const dexResponse = await fetch(
-                `https://api.dexscreener.com/latest/dex/tokens/${dexscreenerAddresses}`
+                `https://api.dexscreener.com/latest/dex/tokens/${allAddresses}`
             );
 
             if (dexResponse.ok) {
                 const dexData = await dexResponse.json();
                 if (dexData.pairs) {
-                    // Map tokens to their highest liquidity pair price
-                    dexscreenerTokens.forEach(token => {
-                        // Find the best pair for this token on World Chain
+                    WORLD_CHAIN_TOKENS.forEach(token => {
+                        // Find the best pair for this token SPECIFICALLY on World Chain
                         const pairs = dexData.pairs.filter((p: any) =>
+                            p.chainId === 'worldchain' &&
                             p.baseToken.address.toLowerCase() === token.address.toLowerCase()
                         );
 
@@ -104,10 +82,37 @@ async function getTokenPrices(): Promise<Record<string, TokenPrice>> {
             }
         }
 
+        // 2. Fallback to CoinGecko only for tokens missing from DEX Screener (if any)
+        // or for those with established IDs where we want to cross-reference
+        const missingSymbols = WORLD_CHAIN_TOKENS.filter(t => !prices[t.symbol]);
+        const geckoIdsToFetch = missingSymbols
+            .map(t => COINGECKO_IDS[t.symbol])
+            .filter(Boolean)
+            .join(',');
+
+        if (geckoIdsToFetch) {
+            const geckoResponse = await fetch(
+                `https://api.coingecko.com/api/v3/simple/price?ids=${geckoIdsToFetch}&vs_currencies=usd&include_24hr_change=true`
+            );
+
+            if (geckoResponse.ok) {
+                const geckoData = await geckoResponse.json();
+                missingSymbols.forEach(token => {
+                    const geckoId = COINGECKO_IDS[token.symbol];
+                    if (geckoId && geckoData[geckoId]) {
+                        prices[token.symbol] = {
+                            usd: geckoData[geckoId].usd || 0,
+                            usd_24h_change: geckoData[geckoId].usd_24h_change || 0
+                        };
+                    }
+                });
+            }
+        }
+
         return prices;
     } catch (error) {
-        console.error('Failed to fetch prices from one or more sources:', error);
-        return prices; // Return whatever we managed to fetch
+        console.error('Failed to fetch prices from primary sources:', error);
+        return prices;
     }
 }
 
