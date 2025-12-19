@@ -14,6 +14,11 @@ const nextConfig: NextConfig = {
         hostname: 's2.coinmarketcap.com',
         pathname: '/static/img/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'cdn.dexscreener.com',
+        pathname: '/cms/images/**',
+      },
     ],
   },
 };

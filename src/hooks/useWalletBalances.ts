@@ -44,26 +44,70 @@ async function getTokenBalance(tokenAddress: string, walletAddress: string): Pro
 }
 
 async function getTokenPrices(): Promise<Record<string, TokenPrice>> {
-    try {
-        const ids = Object.values(COINGECKO_IDS).join(',');
-        const response = await fetch(
-            `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`
-        );
-        const data = await response.json();
+    const prices: Record<string, TokenPrice> = {};
 
-        const prices: Record<string, TokenPrice> = {};
-        for (const [symbol, geckoId] of Object.entries(COINGECKO_IDS)) {
-            if (data[geckoId]) {
-                prices[symbol] = {
-                    usd: data[geckoId].usd || 0,
-                    usd_24h_change: data[geckoId].usd_24h_change || 0
-                };
+    try {
+        // 1. Fetch from CoinGecko for tokens with established IDs
+        const geckoSymbols = Object.keys(COINGECKO_IDS);
+        const geckoIds = Object.values(COINGECKO_IDS).join(',');
+
+        const geckoResponse = await fetch(
+            `https://api.coingecko.com/api/v3/simple/price?ids=${geckoIds}&vs_currencies=usd&include_24hr_change=true`
+        );
+
+        if (geckoResponse.ok) {
+            const geckoData = await geckoResponse.json();
+            for (const symbol of geckoSymbols) {
+                const geckoId = COINGECKO_IDS[symbol];
+                if (geckoData[geckoId]) {
+                    prices[symbol] = {
+                        usd: geckoData[geckoId].usd || 0,
+                        usd_24h_change: geckoData[geckoId].usd_24h_change || 0
+                    };
+                }
             }
         }
+
+        // 2. Fetch from DEX Screener for tokens NOT in CoinGecko mapping
+        // This targets newer or less common World Chain tokens
+        const dexscreenerTokens = WORLD_CHAIN_TOKENS.filter(t => !COINGECKO_IDS[t.symbol]);
+        const dexscreenerAddresses = dexscreenerTokens.map(t => t.address).join(',');
+
+        if (dexscreenerAddresses) {
+            const dexResponse = await fetch(
+                `https://api.dexscreener.com/latest/dex/tokens/${dexscreenerAddresses}`
+            );
+
+            if (dexResponse.ok) {
+                const dexData = await dexResponse.json();
+                if (dexData.pairs) {
+                    // Map tokens to their highest liquidity pair price
+                    dexscreenerTokens.forEach(token => {
+                        // Find the best pair for this token on World Chain
+                        const pairs = dexData.pairs.filter((p: any) =>
+                            p.baseToken.address.toLowerCase() === token.address.toLowerCase()
+                        );
+
+                        if (pairs.length > 0) {
+                            // Sort by liquidity to get the most reliable price
+                            const bestPair = pairs.sort((a: any, b: any) =>
+                                (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0)
+                            )[0];
+
+                            prices[token.symbol] = {
+                                usd: parseFloat(bestPair.priceUsd || '0'),
+                                usd_24h_change: bestPair.priceChange?.h24 || 0
+                            };
+                        }
+                    });
+                }
+            }
+        }
+
         return prices;
     } catch (error) {
-        console.error('Failed to fetch prices:', error);
-        return {};
+        console.error('Failed to fetch prices from one or more sources:', error);
+        return prices; // Return whatever we managed to fetch
     }
 }
 
