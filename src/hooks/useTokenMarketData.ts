@@ -146,6 +146,7 @@ async function fetchMarketData(symbol: string, period: ChartPeriod): Promise<Tok
                 )
 
                 let tokenParam = "base" // default
+                let needsInversion = false
 
                 if (poolInfoRes.ok) {
                     const poolInfo = await poolInfoRes.json()
@@ -156,6 +157,7 @@ async function fetchMarketData(symbol: string, period: ChartPeriod): Promise<Tok
                     // Determinar si nuestro token es base o quote EN GECKOTERMINAL
                     if (quoteTokenAddress === ourTokenAddress) {
                         tokenParam = "quote"
+                        needsInversion = true
                     } else if (baseTokenAddress === ourTokenAddress) {
                         tokenParam = "base"
                     }
@@ -173,11 +175,20 @@ async function fetchMarketData(symbol: string, period: ChartPeriod): Promise<Tok
                     const ohlcvList = ohlcvData.data?.attributes?.ohlcv_list || []
 
                     priceHistory = ohlcvList
-                        .map(([ts, o, h, l, c, v]: [number, number, number, number, number, number]) => ({
-                            timestamp: ts * 1000,
-                            price: c,
-                            volume: v,
-                        }))
+                        .map(([ts, o, h, l, c, v]: [number, number, number, number, number, number]) => {
+                            if (needsInversion && c > 0) {
+                                return {
+                                    timestamp: ts * 1000,
+                                    price: 1 / c,
+                                    volume: v,
+                                }
+                            }
+                            return {
+                                timestamp: ts * 1000,
+                                price: c,
+                                volume: v,
+                            }
+                        })
                         .reverse()
                 }
             }
@@ -192,7 +203,6 @@ async function fetchMarketData(symbol: string, period: ChartPeriod): Promise<Tok
             high24h = Math.max(...priceHistory.map((p) => p.price))
             low24h = Math.min(...priceHistory.map((p) => p.price))
         } else if (bestPair) {
-            // Usar cambio 24h para estimar high/low si no hay historial
             const changePercent = Math.abs(change24h) / 100
             high24h = price * (1 + changePercent / 2)
             low24h = price * (1 - changePercent / 2)
