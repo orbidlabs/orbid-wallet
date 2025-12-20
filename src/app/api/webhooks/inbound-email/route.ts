@@ -135,14 +135,14 @@ export async function POST(request: NextRequest) {
         updates.history = currentHistory;
         updates.updated_at = new Date().toISOString();
 
-        // Re-open logic (using 'in-progress' to comply with DB constraints)
+        // Re-open logic (Requires running SQL to allow 're-opened' status)
         if (ticket.status === 'resolved' || ticket.status === 'closed') {
-            updates.status = 'in-progress';
+            updates.status = 're-opened';
             updates.resolved_at = null;
 
             currentHistory.push({
                 type: 'status_change',
-                content: 'Ticket re-opened by user email reply (status set to in-progress)',
+                content: 'Ticket re-opened by user email reply',
                 author: 'System',
                 timestamp: new Date().toISOString()
             });
