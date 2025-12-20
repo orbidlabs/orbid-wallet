@@ -216,7 +216,7 @@ async function fetchMarketData(symbol: string, period: ChartPeriod): Promise<Tok
         // Apply stablecoin overrides after fetch
         // Note: sDAI is usually interest bearing (> $1), so we might want to keep its price.
         // But for USDC, USDT, etc, we force $1.00 for UI consistency.
-        const forceFlat_1USD = ["USDC", "USDT", "DAI", "USDC.e"].includes(symbol)
+        const forceFlat_1USD = ["USDC", "USDT", "sDAI", "DAI", "USDC.e"].includes(symbol)
 
         if (forceFlat_1USD) {
             price = 1
