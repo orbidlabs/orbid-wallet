@@ -53,6 +53,26 @@ const TOPIC_LABELS: Record<string, string> = {
     'other': 'Otro'
 };
 
+const LANGUAGES: Record<string, { name: string, flag: string }> = {
+    'en': { name: 'English', flag: '🇺🇸' },
+    'es': { name: 'Español', flag: '🇪🇸' },
+    'es_419': { name: 'Español (LATAM)', flag: '🇲🇽' },
+    'pt': { name: 'Português', flag: '🇧🇷' },
+    'fr': { name: 'Français', flag: '🇫🇷' },
+    'de': { name: 'Deutsch', flag: '🇩🇪' },
+    'ja': { name: '日本語', flag: '🇯🇵' },
+    'ko': { name: '한국어', flag: '🇰🇷' },
+    'zh_CN': { name: '简体中文', flag: '🇨🇳' },
+    'zh_TW': { name: '繁體中文', flag: '🇹🇼' },
+    'hi': { name: 'हिन्दी', flag: '🇮🇳' },
+    'ar': { name: 'العربية', flag: '🇸🇦' },
+    'ca': { name: 'Català', flag: '🇪🇸' },
+    'id': { name: 'Bahasa Indonesia', flag: '🇮🇩' },
+    'ms': { name: 'Bahasa Melayu', flag: '🇲🇾' },
+    'pl': { name: 'Polski', flag: '🇵🇱' },
+    'th': { name: 'ไทย', flag: '🇹🇭' }
+};
+
 export default function TicketDetailPage() {
     const params = useParams();
     const router = useRouter();
@@ -503,7 +523,9 @@ export default function TicketDetailPage() {
 
                         <div>
                             <p className="text-xs text-zinc-500">Idioma</p>
-                            <p className="text-sm">{ticket.language === 'es' ? '🇪🇸 Español' : '🇺🇸 English'}</p>
+                            <p className="text-sm">
+                                {LANGUAGES[ticket.language]?.flag || '🌐'} {LANGUAGES[ticket.language]?.name || ticket.language.toUpperCase()}
+                            </p>
                         </div>
 
                         <div>

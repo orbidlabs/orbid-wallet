@@ -38,6 +38,12 @@ const TOPIC_ICONS: Record<string, string> = {
     'general': '❓', 'transactions': '💸', 'account': '👤', 'security': '🔐', 'other': '📝'
 };
 
+const LANGUAGE_FLAGS: Record<string, string> = {
+    'en': '🇺🇸', 'es': '🇪🇸', 'es_419': '🇲🇽', 'pt': '🇧🇷', 'fr': '🇫🇷', 'de': '🇩🇪',
+    'ja': '🇯🇵', 'ko': '🇰🇷', 'zh_CN': '🇨🇳', 'zh_TW': '🇹🇼', 'hi': '🇮🇳', 'ar': '🇸🇦',
+    'ca': '🇪🇸', 'id': '🇮🇩', 'ms': '🇲🇾', 'pl': '🇵🇱', 'th': '🇹🇭'
+};
+
 export default function AdminTicketsPage() {
     const [authenticated, setAuthenticated] = useState(false);
     const [password, setPassword] = useState('');
@@ -244,7 +250,7 @@ export default function AdminTicketsPage() {
                                             <div>
                                                 <p className="font-medium text-white">{ticket.email}</p>
                                                 <p className="text-xs text-zinc-500">
-                                                    {ticket.ticket_id} • {timeAgo(ticket.created_at)}
+                                                    {ticket.ticket_id} • {LANGUAGE_FLAGS[ticket.language] || '🌐'} {ticket.language.toUpperCase()} • {timeAgo(ticket.created_at)}
                                                 </p>
                                             </div>
                                         </div>

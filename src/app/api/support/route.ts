@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { supportEmailTranslations, type SupportedLanguage } from '@/lib/supportEmailTranslations';
 
 // Lazy-init Supabase client
 let _supabase: SupabaseClient | null = null;
@@ -49,10 +50,19 @@ function generateTicketId(): string {
     return `TKT-${timestamp}-${random}`.toUpperCase();
 }
 
-/** Get language from Accept-Language header */
-function getLanguage(request: NextRequest): string {
+/** Get language from request body or Accept-Language header */
+function getLanguage(request: NextRequest, bodyLang?: string): SupportedLanguage {
+    // 1. Priority: Explicit language from the app body
+    if (bodyLang) return bodyLang as SupportedLanguage;
+
+    // 2. Fallback: Browser headers
     const acceptLang = request.headers.get('Accept-Language') || 'en';
-    return acceptLang.startsWith('es') ? 'es' : 'en';
+    const firstLang = acceptLang.split(',')[0].split('-')[0].toLowerCase();
+
+    // Check if it's one of our supported codes
+    const supportedCodes = Object.keys(supportEmailTranslations);
+    const lang = supportedCodes.includes(firstLang) ? firstLang : 'en';
+    return lang as SupportedLanguage;
 }
 
 /** Helper to send email via Brevo */
@@ -80,31 +90,17 @@ async function sendEmailViaBREVO(email: string, subject: string, html: string) {
 
 /** Send confirmation email */
 async function sendConfirmationEmail(email: string, ticketId: string, topic: string, lang: string) {
+    const sl = (Object.keys(supportEmailTranslations).includes(lang) ? lang : 'en') as SupportedLanguage;
+    const t = supportEmailTranslations[sl].confirmation;
+    const currentTopicLabels = supportEmailTranslations[sl].topics;
 
-    const t = lang === 'es' ? {
-        title: 'Ticket Recibido',
-        subtitle: 'Hemos recibido tu solicitud de soporte',
-        ticketLabel: 'Número de Ticket',
-        categoryLabel: 'Categoría',
-        responseTime: 'Te responderemos en 24-48 horas',
-        footer: 'Si tienes más preguntas, responde a este email.'
-    } : {
-        title: 'Ticket Received',
-        subtitle: "We've received your support request",
-        ticketLabel: 'Ticket Number',
-        categoryLabel: 'Category',
-        responseTime: "We'll respond within 24-48 hours",
-        footer: 'If you have more questions, reply to this email.'
-    };
-
-    const topicLabels: Record<string, Record<string, string>> = {
-        en: { general: 'General Question', transactions: 'Transaction Issue', account: 'Account Help', security: 'Security', other: 'Other' },
-        es: { general: 'Pregunta General', transactions: 'Problema de Transacción', account: 'Ayuda con Cuenta', security: 'Seguridad', other: 'Otro' }
-    };
+    const isRTL = sl === 'ar';
+    const dir = isRTL ? 'rtl' : 'ltr';
+    const textAlign = isRTL ? 'right' : 'center';
 
     const html = `
 <!DOCTYPE html>
-<html>
+<html dir="${dir}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -132,7 +128,7 @@ async function sendConfirmationEmail(email: string, ticketId: string, topic: str
                     
                     <!-- Title -->
                     <tr>
-                        <td align="center" style="padding-bottom: 10px;">
+                        <td align="${textAlign}" style="padding-bottom: 10px;">
                             <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600;">
                                 ${t.title}
                             </h1>
@@ -141,7 +137,7 @@ async function sendConfirmationEmail(email: string, ticketId: string, topic: str
                     
                     <!-- Subtitle -->
                     <tr>
-                        <td align="center" style="padding-bottom: 30px;">
+                        <td align="${textAlign}" style="padding-bottom: 30px;">
                             <p style="margin: 0; color: #a1a1aa; font-size: 14px;">
                                 ${t.subtitle}
                             </p>
@@ -162,15 +158,15 @@ async function sendConfirmationEmail(email: string, ticketId: string, topic: str
 
                     <!-- Category -->
                     <tr>
-                        <td align="center" style="padding-bottom: 20px;">
+                        <td align="${textAlign}" style="padding-bottom: 20px;">
                             <p style="margin: 0 0 4px; color: #a1a1aa; font-size: 12px;">${t.categoryLabel}</p>
-                            <p style="margin: 0; color: #ffffff; font-size: 16px;">${topicLabels[lang][topic] || topic}</p>
+                            <p style="margin: 0; color: #ffffff; font-size: 16px;">${currentTopicLabels[topic] || topic}</p>
                         </td>
                     </tr>
                     
                     <!-- Response Time -->
                     <tr>
-                        <td align="center" style="padding-bottom: 20px;">
+                        <td align="${textAlign}" style="padding-bottom: 20px;">
                             <p style="margin: 0; color: #ec4899; font-size: 14px; font-weight: 500;">
                                 ${t.responseTime}
                             </p>
@@ -186,7 +182,7 @@ async function sendConfirmationEmail(email: string, ticketId: string, topic: str
                     
                     <!-- Footer -->
                     <tr>
-                        <td align="center">
+                        <td align="${textAlign}">
                             <p style="margin: 0; color: #52525b; font-size: 11px; line-height: 1.6;">
                                 ${t.footer}
                             </p>
@@ -199,30 +195,18 @@ async function sendConfirmationEmail(email: string, ticketId: string, topic: str
 </body>
 </html>`;
 
-    const subject = lang === 'es' ? `Ticket #${ticketId} - Recibido` : `Ticket #${ticketId} - Received`;
+    const subject = `${t.subject} #${ticketId}`;
     await sendEmailViaBREVO(email, subject, html);
 }
 
 /** Send resolved email */
 async function sendResolvedEmail(email: string, ticketId: string, adminReply: string | null, lang: string, attachmentUrls: string[] = []) {
+    const sl = (Object.keys(supportEmailTranslations).includes(lang) ? lang : 'en') as SupportedLanguage;
+    const t = supportEmailTranslations[sl].resolved;
 
-    const t = lang === 'es' ? {
-        title: 'Ticket Resuelto',
-        subtitle: 'Tu solicitud ha sido atendida',
-        ticketLabel: 'Ticket',
-        responseLabel: 'Nuestra respuesta',
-        noReply: 'Tu problema ha sido resuelto.',
-        attachmentsLabel: 'Archivos adjuntos',
-        footer: 'Si aún necesitas ayuda, responde a este email.'
-    } : {
-        title: 'Ticket Resolved',
-        subtitle: 'Your request has been addressed',
-        ticketLabel: 'Ticket',
-        responseLabel: 'Our response',
-        noReply: 'Your issue has been resolved.',
-        attachmentsLabel: 'Attachments',
-        footer: 'If you still need help, just reply to this email.'
-    };
+    const isRTL = sl === 'ar';
+    const dir = isRTL ? 'rtl' : 'ltr';
+    const textAlign = isRTL ? 'right' : 'center';
 
     const attachmentsHtml = attachmentUrls.length > 0 ? `
                     <tr>
@@ -234,7 +218,7 @@ async function sendResolvedEmail(email: string, ticketId: string, adminReply: st
 
     const html = `
 <!DOCTYPE html>
-<html>
+<html dir="${dir}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -262,7 +246,7 @@ async function sendResolvedEmail(email: string, ticketId: string, adminReply: st
                     
                     <!-- Title -->
                     <tr>
-                        <td align="center" style="padding-bottom: 10px;">
+                        <td align="${textAlign}" style="padding-bottom: 10px;">
                             <h1 style="margin: 0; color: #10b981; font-size: 24px; font-weight: 600;">
                                 ✓ ${t.title}
                             </h1>
@@ -271,7 +255,7 @@ async function sendResolvedEmail(email: string, ticketId: string, adminReply: st
                     
                     <!-- Subtitle -->
                     <tr>
-                        <td align="center" style="padding-bottom: 20px;">
+                        <td align="${textAlign}" style="padding-bottom: 20px;">
                             <p style="margin: 0; color: #a1a1aa; font-size: 14px;">
                                 ${t.subtitle}
                             </p>
@@ -280,7 +264,7 @@ async function sendResolvedEmail(email: string, ticketId: string, adminReply: st
 
                     <!-- Ticket ID -->
                     <tr>
-                        <td align="center" style="padding-bottom: 20px;">
+                        <td align="${textAlign}" style="padding-bottom: 20px;">
                             <p style="margin: 0; color: #71717a; font-size: 12px;">
                                 ${t.ticketLabel} <span style="color: #ffffff; font-family: monospace;">#${ticketId}</span>
                             </p>
@@ -308,7 +292,7 @@ async function sendResolvedEmail(email: string, ticketId: string, adminReply: st
                     
                     <!-- Footer -->
                     <tr>
-                        <td align="center">
+                        <td align="${textAlign}">
                             <p style="margin: 0; color: #52525b; font-size: 11px; line-height: 1.6;">
                                 ${t.footer}
                             </p>
@@ -321,30 +305,18 @@ async function sendResolvedEmail(email: string, ticketId: string, adminReply: st
 </body>
 </html>`;
 
-    const subject = lang === 'es' ? `Ticket #${ticketId} - Resuelto ✓` : `Ticket #${ticketId} - Resolved ✓`;
+    const subject = `${t.subject} #${ticketId} ✓`;
     await sendEmailViaBREVO(email, subject, html);
 }
 
 /** Send reply email (for in-progress tickets) */
 async function sendReplyEmail(email: string, ticketId: string, replyMessage: string, lang: string, attachmentUrls: string[] = []) {
+    const sl = (Object.keys(supportEmailTranslations).includes(lang) ? lang : 'en') as SupportedLanguage;
+    const t = supportEmailTranslations[sl].reply;
 
-    const t = lang === 'es' ? {
-        title: 'Nueva Respuesta',
-        subtitle: 'Tienes una nueva respuesta en tu ticket',
-        ticketLabel: 'Ticket',
-        messageLabel: 'Mensaje',
-        attachmentsLabel: 'Archivos adjuntos',
-        replyPrompt: 'Responde a este email para continuar la conversación.',
-        footer: 'Si tienes más preguntas, responde a este email.'
-    } : {
-        title: 'New Reply',
-        subtitle: 'You have a new reply on your ticket',
-        ticketLabel: 'Ticket',
-        messageLabel: 'Message',
-        attachmentsLabel: 'Attachments',
-        replyPrompt: 'Reply to this email to continue the conversation.',
-        footer: 'If you have more questions, reply to this email.'
-    };
+    const isRTL = sl === 'ar';
+    const dir = isRTL ? 'rtl' : 'ltr';
+    const textAlign = isRTL ? 'right' : 'center';
 
     const attachmentsHtml = attachmentUrls.length > 0 ? `
                     <tr>
@@ -356,7 +328,7 @@ async function sendReplyEmail(email: string, ticketId: string, replyMessage: str
 
     const html = `
 <!DOCTYPE html>
-<html>
+<html dir="${dir}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -384,7 +356,7 @@ async function sendReplyEmail(email: string, ticketId: string, replyMessage: str
                     
                     <!-- Title -->
                     <tr>
-                        <td align="center" style="padding-bottom: 10px;">
+                        <td align="${textAlign}" style="padding-bottom: 10px;">
                             <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600;">
                                 ${t.title}
                             </h1>
@@ -393,7 +365,7 @@ async function sendReplyEmail(email: string, ticketId: string, replyMessage: str
                     
                     <!-- Subtitle -->
                     <tr>
-                        <td align="center" style="padding-bottom: 20px;">
+                        <td align="${textAlign}" style="padding-bottom: 20px;">
                             <p style="margin: 0; color: #a1a1aa; font-size: 14px;">
                                 ${t.subtitle}
                             </p>
@@ -402,7 +374,7 @@ async function sendReplyEmail(email: string, ticketId: string, replyMessage: str
 
                     <!-- Ticket ID -->
                     <tr>
-                        <td align="center" style="padding-bottom: 20px;">
+                        <td align="${textAlign}" style="padding-bottom: 20px;">
                             <p style="margin: 0; color: #71717a; font-size: 12px;">
                                 ${t.ticketLabel} <span style="color: #ffffff; font-family: monospace;">#${ticketId}</span>
                             </p>
@@ -423,7 +395,7 @@ async function sendReplyEmail(email: string, ticketId: string, replyMessage: str
 
                     <!-- Reply Prompt -->
                     <tr>
-                        <td align="center" style="padding-bottom: 20px;">
+                        <td align="${textAlign}" style="padding-bottom: 20px;">
                             <p style="margin: 0; color: #ec4899; font-size: 13px; font-weight: 500;">
                                 ${t.replyPrompt}
                             </p>
@@ -439,7 +411,7 @@ async function sendReplyEmail(email: string, ticketId: string, replyMessage: str
                     
                     <!-- Footer -->
                     <tr>
-                        <td align="center">
+                        <td align="${textAlign}">
                             <p style="margin: 0; color: #52525b; font-size: 11px; line-height: 1.6;">
                                 ${t.footer}
                             </p>
@@ -452,7 +424,7 @@ async function sendReplyEmail(email: string, ticketId: string, replyMessage: str
 </body>
 </html>`;
 
-    const subject = lang === 'es' ? `Re: Ticket ${ticketId}` : `Re: Ticket ${ticketId}`;
+    const subject = `${t.subject} #${ticketId}`;
     await sendEmailViaBREVO(email, subject, html);
 }
 
@@ -466,13 +438,13 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { email, topic, message, walletAddress, priority = 'medium', attachments = [] } = body;
+        const { email, topic, message, walletAddress, language: bodyLang, priority = 'medium', attachments = [] } = body;
 
         if (!email || !topic || !message) {
             return NextResponse.json({ error: 'Email, topic, and message required' }, { status: 400 });
         }
 
-        const lang = getLanguage(request);
+        const lang = getLanguage(request, bodyLang);
         const ticketId = generateTicketId();
 
         // Initialize history with user's first message

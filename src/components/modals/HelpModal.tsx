@@ -154,6 +154,7 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
                     topic: selectedTopic,
                     message,
                     attachments: uploadedUrls,
+                    language: lang,
                 })
             });
 
