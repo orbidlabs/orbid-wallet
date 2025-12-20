@@ -10,6 +10,36 @@ function getSupabase() {
     return createClient(supabaseUrl, supabaseServiceKey);
 }
 
+/** 
+ * Strips quoted history from email body.
+ * Handles common markers like "On ... wrote:" or "--- Reply above ---"
+ */
+function stripEmailThread(text: string): string {
+    if (!text) return "";
+
+    // Common thread markers
+    const markers = [
+        /^On .+, .+, .+ wrote:$/m,
+        /^De: .+/m,
+        /^From: .+/m,
+        /^-+ Original Message -+$/m,
+        /^-+ Mensaje original -+$/m,
+        /^> .+/m,
+        /--\nReply above this line/i,
+    ];
+
+    let cleanText = text;
+
+    for (const marker of markers) {
+        const match = cleanText.match(marker);
+        if (match && match.index !== undefined) {
+            cleanText = cleanText.substring(0, match.index);
+        }
+    }
+
+    return cleanText.trim();
+}
+
 export async function POST(request: NextRequest) {
     console.log('📨 Inbound Email Webhook Triggered');
 
@@ -17,24 +47,50 @@ export async function POST(request: NextRequest) {
         // Security check: Match MAILER_SECRET
         const authHeader = request.headers.get("Authorization");
         if (authHeader !== `Bearer ${process.env.MAILER_SECRET}`) {
+            console.error('❌ Unauthorized webhook attempt');
             return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
         }
 
         const body = await request.json();
 
-        // Brevo/Sendinblue Inbound Parse payload usually has 'items' array or direct fields depending on config
-        // Assuming standard inbound JSON format involves 'subject' and 'textBody' or 'items'
-        // For standard JSON mode:
-        const subject = body.subject || body.Subject || '';
-        const textBody = body.textBody || body['TextBody'] || body.htmlBody || ''; // prefer text, fallback to html
-        const fromEmail = body.from || body.From || '';
+        // Cloudflare Worker sends: { from, subject, raw }
+        const subject = body.subject || '';
+        const rawBody = body.raw || '';
+        const fromEmail = body.from || '';
+
+        // Extract clean body from raw (if it's a raw email string)
+        // Cloudflare Worker currently sends the raw text, which includes headers.
+        // We need a simple extraction of the body or assuming the Worker sends textBody in the future.
+        // For now, let's treat the payload as having a 'text' field if we update the worker,
+        // or just take the body part of raw.
+
+        let messageContent = body.text || rawBody;
+
+        // If it's the raw multi-part email, this is complex. 
+        // Let's assume the user's worker sends the text part or we parse it simply.
+        if (rawBody.includes('\r\n\r\n')) {
+            // Very basic extraction of the first text block if we have the raw email
+            const parts = rawBody.split('\r\n\r\n');
+            if (parts.length > 1) {
+                // Heuristic: The body is usually after the headers
+                // This is a naive fallback. Ideally the worker sends the text.
+                messageContent = parts.slice(1).join('\r\n\r\n');
+            }
+        }
+
+        const cleanMessage = stripEmailThread(messageContent);
+
+        if (!cleanMessage) {
+            console.log('⚠️ Empty message content after stripping');
+            return NextResponse.json({ message: 'Empty message' }, { status: 200 });
+        }
 
         // Extract Ticket ID: Looks for "Ticket #TKT-..." or matches TKT-XXXX-XXXX directly
         const ticketIdMatch = subject.match(/(TKT-[A-Z0-9]+-[A-Z0-9]+)/i);
 
         if (!ticketIdMatch) {
             console.log('⚠️ No Ticket ID found in subject:', subject);
-            return NextResponse.json({ message: 'No ticket ID found' }, { status: 200 }); // Return 200 to satisfy webhook sender
+            return NextResponse.json({ message: 'No ticket ID found' }, { status: 200 });
         }
 
         const ticketId = ticketIdMatch[1].toUpperCase();
@@ -58,22 +114,12 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ message: 'Ticket not found' }, { status: 200 });
         }
 
-        // Security check: Ensure sender matches ticket owner (basic check)
-        // Note: 'fromEmail' formats can vary "Name <email@com>" or just "email@com"
-        if (!fromEmail.includes(ticket.email)) {
-            console.warn(`⚠️ Sender mismatch: ${fromEmail} !== ${ticket.email}`);
-            // We might want to allow it if it's an admin reply, but this webhook is for USER replies usually?
-            // For now, let's log but proceed (or strict check?)
-            // Strict check might block legitimate replies if forwarded. 
-            // Let's assume Brevo validates DMARC/SPF if configured.
-        }
-
         // Prepare updates
         const updates: any = {};
         const newHistoryItem = {
             type: 'user_message',
-            content: textBody,
-            author: ticket.email, // Assume author is the user
+            content: cleanMessage,
+            author: ticket.email,
             timestamp: new Date().toISOString()
         };
 
@@ -86,17 +132,16 @@ export async function POST(request: NextRequest) {
         // Re-open logic
         if (ticket.status === 'resolved' || ticket.status === 'closed') {
             updates.status = 're-opened';
-            updates.resolved_at = null; // Clear resolved date? Or keep it? keeping might be better history. Let's clear to indicate active.
+            updates.resolved_at = null;
 
-            // Log status change
             currentHistory.push({
                 type: 'status_change',
-                content: 'Ticket re-opened by user reply',
+                content: 'Ticket re-opened by user email reply',
                 author: 'System',
                 timestamp: new Date().toISOString()
             });
         } else if (ticket.status === 'new') {
-            updates.status = 'in-progress'; // Flip to in-progress if they reply to auto-responder?
+            updates.status = 'in-progress';
         }
 
         // Update DB
@@ -110,7 +155,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Update failed' }, { status: 500 });
         }
 
-        console.log(`✅ Ticket ${ticketId} updated successfully`);
+        console.log(`✅ Ticket ${ticketId} updated successfully from email`);
         return NextResponse.json({ success: true });
 
     } catch (e) {
