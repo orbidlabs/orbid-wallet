@@ -74,17 +74,6 @@ async function fetchMarketData(symbol: string, period: ChartPeriod): Promise<Tok
         return emptyData
     }
 
-    // Stablecoin handling
-    if (STABLECOIN_SYMBOLS.includes(symbol)) {
-        return {
-            ...emptyData,
-            price: 1,
-            high24h: 1,
-            low24h: 1,
-            priceHistory: generateStablecoinHistory(period),
-        }
-    }
-
     try {
         // 1. Fetch from DEX Screener for price and stats
         const dexResponse = await fetch(`https://api.dexscreener.com/tokens/v1/worldchain/${token.address}`, {
@@ -100,6 +89,16 @@ async function fetchMarketData(symbol: string, period: ChartPeriod): Promise<Tok
         const tokenAddr = token.address.toLowerCase()
 
         if (!Array.isArray(pairs) || pairs.length === 0) {
+            // Fallback for stablecoins if no pairs found
+            if (STABLECOIN_SYMBOLS.includes(symbol)) {
+                return {
+                    ...emptyData,
+                    price: 1,
+                    high24h: 1,
+                    low24h: 1,
+                    priceHistory: generateStablecoinHistory(period),
+                }
+            }
             return emptyData
         }
 
@@ -198,8 +197,8 @@ async function fetchMarketData(symbol: string, period: ChartPeriod): Promise<Tok
                 )
 
                 if (ohlcvRes.ok) {
-                    const ohlcvData = await ohlcvRes.json()
-                    const ohlcvList = ohlcvData.data?.attributes?.ohlcv_list || []
+                    const ohlcvData = ohlcvRes.ok ? await ohlcvRes.json() : null
+                    const ohlcvList = ohlcvData?.data?.attributes?.ohlcv_list || []
 
                     priceHistory = ohlcvList
                         .map(([ts, o, h, l, c, v]: [number, number, number, number, number, number]) => ({
@@ -214,6 +213,16 @@ async function fetchMarketData(symbol: string, period: ChartPeriod): Promise<Tok
             console.warn(`GeckoTerminal chart failed for ${symbol}`, ce)
         }
 
+        // Apply stablecoin overrides after fetch
+        // Note: sDAI is usually interest bearing (> $1), so we might want to keep its price.
+        // But for USDC, USDT, etc, we force $1.00 for UI consistency.
+        const forceFlat_1USD = ["USDC", "USDT", "DAI", "USDC.e"].includes(symbol)
+
+        if (forceFlat_1USD) {
+            price = 1
+            priceHistory = generateStablecoinHistory(period)
+        }
+
         // Calculate High/Low 24h
         let high24h = price
         let low24h = price
@@ -226,6 +235,12 @@ async function fetchMarketData(symbol: string, period: ChartPeriod): Promise<Tok
             const changePercent = Math.abs(change24h) / 100
             high24h = price * (1 + changePercent / 2)
             low24h = price * (1 - changePercent / 2)
+        }
+
+        // Force high/low for flat stablecoins
+        if (forceFlat_1USD) {
+            high24h = 1
+            low24h = 1
         }
 
         // Calculate 7d change from history
