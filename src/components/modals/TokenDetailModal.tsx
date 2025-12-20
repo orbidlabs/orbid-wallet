@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
+import { motion } from 'framer-motion';
 import type { TokenBalance } from '@/lib/types';
 import { useTokenMarketData, ChartPeriod, PricePoint } from '@/hooks/useTokenMarketData';
 import { useI18n } from '@/lib/i18n';
@@ -43,46 +44,7 @@ const PERIOD_LABELS: Record<ChartPeriod, string> = {
     'max': 'MAX'
 };
 
-// Token-specific brand colors
-const TOKEN_COLORS: Record<string, string> = {
-    // Major tokens
-    'WLD': '#ffffff',      // Worldcoin - White
-    'BTC': '#f7931a',      // Bitcoin - Orange
-    'WBTC': '#f7931a',     // Wrapped Bitcoin - Orange
-    'ETH': '#627eea',      // Ethereum - Blue/Purple
-    'WETH': '#627eea',     // Wrapped ETH - Blue/Purple
-    'USDC': '#2775ca',     // USDC - Blue
-    'USDT': '#26a17b',     // Tether - Green
-    'LINK': '#375bd2',     // Chainlink - Blue
-    'UNI': '#ff007a',      // Uniswap - Pink
-    'AAVE': '#b6509e',     // Aave - Purple
-    'DAI': '#f5ac37',      // DAI - Yellow
-    'sDAI': '#f5ac37',     // Savings DAI - Yellow
-    'SOL': '#00ffa3',      // Solana - Green
-    'uSOL': '#00ffa3',     // Unifinished SOL - Green
-    'MATIC': '#8247e5',    // Polygon - Purple
-    'ARB': '#28a0f0',      // Arbitrum - Blue
-    'OP': '#ff0420',       // Optimism - Red
-    'AVAX': '#e84142',     // Avalanche - Red
-    // World Chain specific
-    'ORO': '#ffd700',      // ORO - Gold
-    'FOOTBALL': '#00a651', // Football - Green
-    'PUF': '#ff4d00',      // PUF - Bright Orange
-    'ORB': '#7c3aed',      // ORB - Vivid Purple
-    'SUSHI': '#fa52a0',    // Sushi - Pink
-    'uSUI': '#6fbcf0',     // SUI - Light Blue
-    'uXRP': '#23292f',     // XRP - Dark Grey/Black
-    'uDOGE': '#c2a633',    // Dogecoin - Tan/Gold
-    'uPEPE': '#3c7e00',    // PEPE - Dark Green
-    'PEPE': '#3c7e00',     // PEPE - Dark Green
-    // Fallback for unknown tokens
-    'DEFAULT': '#ec4899',  // Pink (app theme)
-};
-
-// Get token color with fallback
-function getTokenColor(symbol: string): string {
-    return TOKEN_COLORS[symbol.toUpperCase()] || TOKEN_COLORS['DEFAULT'];
-}
+const DEFAULT_CHART_COLOR = '#ec4899'; // Pink (app theme)
 
 export default function TokenDetailModal({ tokenBalance, isOpen, onClose, onSend, onBuy }: TokenDetailModalProps) {
     const { t } = useI18n();
@@ -118,8 +80,8 @@ export default function TokenDetailModal({ tokenBalance, isOpen, onClose, onSend
         return { points, path, minPrice, maxPrice };
     }, [marketData]);
 
-    // Determine chart color based on token (brand color)
-    const chartColor = getTokenColor(token.symbol);
+    // Fixed chart color based on app theme
+    const chartColor = DEFAULT_CHART_COLOR;
     const chartGradientId = `gradient-${token.symbol}-${chartPeriod}`;
 
     // Calculate price change for period display
@@ -298,6 +260,11 @@ export default function TokenDetailModal({ tokenBalance, isOpen, onClose, onSend
                                         <stop offset="0%" stopColor={chartColor} stopOpacity="0.3" />
                                         <stop offset="100%" stopColor={chartColor} stopOpacity="0" />
                                     </linearGradient>
+                                    <linearGradient id="scanner-gradient" x1="0" y1="0" x2="1" y2="0">
+                                        <stop offset="0%" stopColor={chartColor} stopOpacity="0" />
+                                        <stop offset="50%" stopColor={chartColor} stopOpacity="0.5" />
+                                        <stop offset="100%" stopColor={chartColor} stopOpacity="0" />
+                                    </linearGradient>
                                 </defs>
 
                                 {/* Fill area */}
@@ -315,6 +282,34 @@ export default function TokenDetailModal({ tokenBalance, isOpen, onClose, onSend
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
                                 />
+
+                                {/* Sweep Animation Line */}
+                                <motion.g
+                                    initial={{ x: padding }}
+                                    animate={{ x: width - padding }}
+                                    transition={{
+                                        duration: 3,
+                                        repeat: Infinity,
+                                        ease: "linear"
+                                    }}
+                                >
+                                    <rect
+                                        x="-10"
+                                        y={padding}
+                                        width="20"
+                                        height={height - 2 * padding}
+                                        fill="url(#scanner-gradient)"
+                                    />
+                                    <line
+                                        x1="0"
+                                        y1={padding}
+                                        x2="0"
+                                        y2={height - padding}
+                                        stroke={chartColor}
+                                        strokeWidth="1"
+                                        strokeOpacity="0.8"
+                                    />
+                                </motion.g>
 
                                 {/* Hover crosshair */}
                                 {hoverX !== null && hoveredPoint && (
