@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -89,6 +89,8 @@ export default function TicketDetailPage() {
     const [replyAttachments, setReplyAttachments] = useState<File[]>([]);
     const [replyAttachmentUrls, setReplyAttachmentUrls] = useState<string[]>([]);
     const [isUploading, setIsUploading] = useState(false);
+    const replyRef = useRef<HTMLTextAreaElement>(null);
+    const notesRef = useRef<HTMLTextAreaElement>(null);
 
     const loadTicket = useCallback(async () => {
         if (!password || !ticketId) return;
@@ -254,6 +256,20 @@ export default function TicketDetailPage() {
         });
     };
 
+    const adjustHeight = (ref: React.RefObject<HTMLTextAreaElement | null>) => {
+        if (ref.current) {
+            ref.current.style.height = 'auto';
+            ref.current.style.height = `${ref.current.scrollHeight}px`;
+        }
+    };
+
+    useEffect(() => {
+        if (ticket) {
+            adjustHeight(replyRef);
+            adjustHeight(notesRef);
+        }
+    }, [ticket, replyText, internalNotes]);
+
     // Login screen
     if (!authenticated) {
         return (
@@ -312,93 +328,194 @@ export default function TicketDetailPage() {
     return (
         <div className="min-h-screen bg-black text-white">
             {/* Header */}
-            <header className="border-b border-zinc-800 px-6 py-4">
-                <div className="max-w-6xl mx-auto flex items-center justify-between">
+            <header className="border-b border-zinc-800 px-6 py-4 sticky top-0 bg-black/80 backdrop-blur-md z-10">
+                <div className="max-w-7xl mx-auto flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <Link href="/admin/tickets" className="text-zinc-400 hover:text-white transition-colors">
                             ← Volver
                         </Link>
                         <span className="text-zinc-600">|</span>
                         <h1 className="font-mono text-lg">{ticket.ticket_id}</h1>
-                        <span className={`px-2 py-1 rounded text-xs ${statusConfig.color}/20 ${statusConfig.textColor}`}>
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusConfig.color}/20 ${statusConfig.textColor} border border-${statusConfig.color === 'bg-blue-500' ? 'blue' : statusConfig.color === 'bg-yellow-500' ? 'yellow' : statusConfig.color === 'bg-emerald-500' ? 'emerald' : statusConfig.color === 'bg-zinc-500' ? 'zinc' : 'violet'}-500/30`}>
                             {statusConfig.label}
-                        </span>
-                        <span className={`text-sm ${priorityConfig.color}`}>
-                            {priorityConfig.emoji} {priorityConfig.label}
                         </span>
                     </div>
                     <button
                         onClick={deleteTicket}
-                        className="px-3 py-1.5 bg-red-500/10 text-red-400 rounded-lg text-sm hover:bg-red-500/20"
+                        className="px-4 py-2 bg-red-500/10 text-red-400 rounded-xl text-sm hover:bg-red-500/20 border border-red-500/20 transition-all active:scale-95"
                     >
-                        🗑️ Eliminar
+                        🗑️ Eliminar Ticket
                     </button>
                 </div>
             </header>
 
-            <div className="max-w-6xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Main Content */}
-                <div className="lg:col-span-2 space-y-6">
-                    {/* Conversation Timeline */}
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-                        <h3 className="font-semibold mb-4 flex items-center gap-2">
-                            <span>💬</span> Historial de Conversación
+            <div className="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* Left Side: Details & Sidebar */}
+                <div className="lg:col-span-4 space-y-6 order-2 lg:order-1">
+                    {/* Information Card */}
+                    <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 space-y-6 sticky top-24">
+                        <h3 className="font-bold text-xs text-zinc-500 uppercase tracking-widest border-b border-zinc-800 pb-2 flex items-center gap-2">
+                            <span>📋</span> Detalles del Ticket
                         </h3>
 
-                        <div className="space-y-4">
-                            {/* If no history, show legacy message */}
-                            {(!ticket.history || ticket.history.length === 0) ? (
-                                <div className="flex gap-3">
-                                    <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center flex-shrink-0">
-                                        <span className="text-blue-400">👤</span>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                                <p className="text-[10px] text-zinc-500 uppercase font-black tracking-tight">Categoría</p>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm">{TOPIC_LABELS[ticket.topic] || ticket.topic}</span>
+                                </div>
+                            </div>
+                            <div className="space-y-1">
+                                <p className="text-[10px] text-zinc-500 uppercase font-black tracking-tight">Idioma</p>
+                                <p className="text-sm flex items-center gap-2">
+                                    <span>{LANGUAGES[ticket.language]?.flag || '🌐'}</span>
+                                    {LANGUAGES[ticket.language]?.name || ticket.language}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-1">
+                            <p className="text-[10px] text-zinc-500 uppercase font-black tracking-tight">Email del Usuario</p>
+                            <p className="text-sm font-medium text-pink-400 break-all select-all">{ticket.email}</p>
+                        </div>
+
+                        {ticket.wallet_address && (
+                            <div className="space-y-1">
+                                <p className="text-[10px] text-zinc-500 uppercase font-black tracking-tight">Dirección de Wallet</p>
+                                <p className="text-[11px] font-mono text-zinc-300 break-all bg-black/30 p-2 rounded-lg border border-zinc-800 select-all cursor-pointer hover:border-zinc-700 transition-colors">
+                                    {ticket.wallet_address}
+                                </p>
+                            </div>
+                        )}
+
+                        <div className="pt-2 space-y-4 border-t border-zinc-800/50">
+                            <div className="space-y-3">
+                                <h3 className="font-bold text-[10px] text-zinc-500 uppercase tracking-widest">Estado</h3>
+                                <div className="relative group">
+                                    <select
+                                        value={ticket.status}
+                                        onChange={(e) => updateTicket({ status: e.target.value })}
+                                        className="w-full h-10 px-3 bg-zinc-800 border border-zinc-700 rounded-xl text-sm appearance-none focus:border-pink-500 outline-none transition-all cursor-pointer"
+                                    >
+                                        <option value="new">🔵 Nuevo</option>
+                                        <option value="in-progress">🟡 En Curso</option>
+                                        <option value="resolved">🟢 Resuelto</option>
+                                        <option value="re-opened">🟣 Re-abierto</option>
+                                        <option value="closed">⚫ Cerrado</option>
+                                    </select>
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500 text-xs text-zinc-600">
+                                        ▼
                                     </div>
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <p className="font-medium text-sm">{ticket.email}</p>
-                                            <span className="text-xs text-zinc-500">{formatDate(ticket.created_at)}</span>
+                                </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <h3 className="font-bold text-[10px] text-zinc-500 uppercase tracking-widest">Prioridad</h3>
+                                <div className="relative">
+                                    <select
+                                        value={ticket.priority}
+                                        onChange={(e) => updateTicket({ priority: e.target.value })}
+                                        className="w-full h-10 px-3 bg-zinc-800 border-zinc-700 border rounded-xl text-sm appearance-none focus:border-pink-500 outline-none transition-all cursor-pointer"
+                                    >
+                                        <option value="low">⚪ Baja</option>
+                                        <option value="medium">🟡 Media</option>
+                                        <option value="high">🔴 Alta</option>
+                                    </select>
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500 text-xs text-zinc-600">
+                                        ▼
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Internal Notes in Sidebar */}
+                        <div className="bg-zinc-800/30 border border-zinc-800 rounded-xl overflow-hidden focus-within:border-yellow-500/30 transition-all mt-4">
+                            <div className="px-3 py-2 bg-zinc-900/30 border-b border-zinc-800 flex items-center justify-between">
+                                <h3 className="font-bold text-[10px] text-zinc-500 uppercase tracking-widest text-yellow-500/80">Notas Internas</h3>
+                                <span className="text-[8px] bg-yellow-500/10 text-yellow-500 px-1.5 py-0.5 rounded-full border border-yellow-500/20 font-bold uppercase tracking-tighter">Privado</span>
+                            </div>
+                            <div className="p-3">
+                                <textarea
+                                    ref={notesRef}
+                                    value={internalNotes}
+                                    onChange={(e) => setInternalNotes(e.target.value)}
+                                    onBlur={() => updateTicket({ internal_notes: internalNotes })}
+                                    placeholder="Añade notas privadas..."
+                                    className="w-full px-0 py-1 bg-transparent text-white border-0 resize-none min-h-[60px] focus:ring-0 text-xs leading-relaxed placeholder-zinc-700 overflow-hidden"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-2 pt-4 border-t border-zinc-800/50">
+                            <div className="flex justify-between items-center text-[11px]">
+                                <p className="text-zinc-500">Fecha creación</p>
+                                <p className="font-bold">{formatDate(ticket.created_at)}</p>
+                            </div>
+                            {ticket.resolved_at && (
+                                <div className="flex justify-between items-center text-[11px]">
+                                    <p className="text-zinc-500">Fecha resolución</p>
+                                    <p className="font-bold text-emerald-500">{formatDate(ticket.resolved_at)}</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Side: Conversation & Reply */}
+                <div className="lg:col-span-8 space-y-8 order-1 lg:order-2">
+                    {/* Conversation Timeline */}
+                    <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl overflow-hidden shadow-sm">
+                        <div className="px-6 py-4 border-b border-zinc-800 bg-zinc-900/30">
+                            <h3 className="font-bold flex items-center gap-2">
+                                <span className="text-lg">💬</span> Historial de Conversación
+                            </h3>
+                        </div>
+
+                        <div className="p-6 space-y-6 max-h-[600px] overflow-y-auto custom-scrollbar">
+                            {(!ticket.history || ticket.history.length === 0) ? (
+                                <div className="flex gap-4">
+                                    <div className="w-10 h-10 bg-blue-500/10 rounded-full flex items-center justify-center flex-shrink-0 border border-blue-500/20">
+                                        <span className="text-xl">👤</span>
+                                    </div>
+                                    <div className="flex-1 space-y-2">
+                                        <div className="flex items-center gap-3">
+                                            <p className="font-bold text-sm text-zinc-100">{ticket.email}</p>
+                                            <span className="text-[10px] uppercase font-bold text-zinc-600 tracking-wider bg-zinc-800 px-2 py-0.5 rounded-full">{formatDate(ticket.created_at)}</span>
                                         </div>
-                                        <div className="bg-zinc-800 rounded-lg p-3">
-                                            <p className="text-zinc-300 text-sm whitespace-pre-wrap">{ticket.message}</p>
+                                        <div className="bg-zinc-800/80 rounded-2xl rounded-tl-none p-4 border border-zinc-700/50">
+                                            <p className="text-zinc-300 text-sm leading-relaxed whitespace-pre-wrap">{ticket.message}</p>
                                         </div>
-                                        {ticket.attachments && ticket.attachments.length > 0 && (
-                                            <div className="flex gap-2 mt-2 flex-wrap">
-                                                {ticket.attachments.map((url, i) => (
-                                                    <a key={i} href={url} target="_blank" rel="noopener noreferrer">
-                                                        <img src={url} alt="" className="w-16 h-16 object-cover rounded-lg border border-zinc-700" />
-                                                    </a>
-                                                ))}
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
                             ) : (
-                                /* Full timeline from history */
                                 ticket.history.map((entry, index) => (
-                                    <div key={index} className={`flex gap-3 ${entry.type === 'admin_reply' ? 'flex-row-reverse' : ''}`}>
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${entry.type === 'user_message' ? 'bg-blue-500/20' :
-                                            entry.type === 'admin_reply' ? 'bg-pink-500/20' :
-                                                'bg-zinc-700'
+                                    <div key={index} className={`flex gap-4 ${entry.type === 'admin_reply' ? 'flex-row-reverse' : ''}`}>
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 border ${entry.type === 'user_message' ? 'bg-blue-500/10 border-blue-500/20' :
+                                            entry.type === 'admin_reply' ? 'bg-pink-500/10 border-pink-500/20' :
+                                                'bg-zinc-800 border-zinc-700'
                                             }`}>
-                                            <span>{entry.type === 'user_message' ? '👤' : entry.type === 'admin_reply' ? '🎧' : '⚙️'}</span>
+                                            <span className="text-xl">{entry.type === 'user_message' ? '👤' : entry.type === 'admin_reply' ? '🎧' : '⚙️'}</span>
                                         </div>
-                                        <div className={`flex-1 max-w-[80%] ${entry.type === 'admin_reply' ? 'text-right' : ''}`}>
-                                            <div className={`flex items-center gap-2 mb-1 ${entry.type === 'admin_reply' ? 'justify-end' : ''}`}>
-                                                <p className="font-medium text-sm text-zinc-400">{entry.author || 'Unknown'}</p>
-                                                <span className="text-xs text-zinc-600">{formatDate(entry.timestamp)}</span>
+                                        <div className={`flex-1 max-w-[85%] ${entry.type === 'admin_reply' ? 'text-right' : ''}`}>
+                                            <div className={`flex items-center gap-2 mb-2 ${entry.type === 'admin_reply' ? 'justify-end' : ''}`}>
+                                                <p className="font-bold text-sm text-zinc-400 capitalize">{entry.author || 'Sistema'}</p>
+                                                <span className="text-[10px] uppercase font-bold text-zinc-600 tracking-wider bg-zinc-800 px-1.5 py-0.5 rounded-full">{formatDate(entry.timestamp)}</span>
                                             </div>
                                             {entry.type === 'status_change' ? (
-                                                <p className="text-xs text-zinc-500 italic">{entry.content}</p>
+                                                <div className="bg-zinc-800/10 border border-dashed border-zinc-800 rounded-lg p-2 inline-block">
+                                                    <p className="text-xs text-zinc-500 italic">{entry.content}</p>
+                                                </div>
                                             ) : (
-                                                <div className={`rounded-lg p-3 ${entry.type === 'admin_reply' ? 'bg-pink-500/10 ml-auto' : 'bg-zinc-800'
+                                                <div className={`rounded-2xl p-4 border ${entry.type === 'admin_reply' ? 'bg-pink-500/5 border-pink-500/10 rounded-tr-none text-left ml-auto' : 'bg-zinc-800/80 border-zinc-700/50 rounded-tl-none'
                                                     }`}>
-                                                    <p className="text-zinc-300 text-sm whitespace-pre-wrap">{entry.content}</p>
+                                                    <p className="text-zinc-300 text-sm leading-relaxed whitespace-pre-wrap">{entry.content}</p>
                                                 </div>
                                             )}
                                             {entry.attachments && entry.attachments.length > 0 && (
-                                                <div className={`flex gap-2 mt-2 flex-wrap ${entry.type === 'admin_reply' ? 'justify-end' : ''}`}>
+                                                <div className={`flex gap-2 mt-3 flex-wrap ${entry.type === 'admin_reply' ? 'justify-end' : ''}`}>
                                                     {entry.attachments.map((url, i) => (
-                                                        <a key={i} href={url} target="_blank" rel="noopener noreferrer">
-                                                            <img src={url} alt="" className="w-16 h-16 object-cover rounded-lg border border-zinc-700" />
+                                                        <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="hover:scale-105 transition-transform">
+                                                            <img src={url} alt="" className="w-20 h-20 object-cover rounded-xl border border-zinc-700 bg-zinc-800" />
                                                         </a>
                                                     ))}
                                                 </div>
@@ -410,165 +527,83 @@ export default function TicketDetailPage() {
                         </div>
                     </div>
 
-                    {/* Admin Reply Section */}
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-                        <h3 className="font-semibold mb-4 flex items-center gap-2">
-                            <span>💬</span> Respuesta al Usuario
-                        </h3>
-                        <textarea
-                            value={replyText}
-                            onChange={(e) => setReplyText(e.target.value)}
-                            placeholder="Escribe tu respuesta aquí..."
-                            className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white resize-none h-32 focus:border-pink-500 focus:outline-none"
-                        />
+                    {/* Reply Section */}
+                    <div className="bg-zinc-900 shadow-xl border border-zinc-800/50 rounded-2xl overflow-hidden focus-within:border-pink-500/30 transition-all">
+                        <div className="px-6 py-4 border-b border-zinc-800 bg-zinc-900/30">
+                            <h3 className="font-bold flex items-center gap-2 text-pink-500">
+                                <span>✍️</span> Redactar Respuesta
+                            </h3>
+                        </div>
+                        <div className="p-6">
+                            <textarea
+                                ref={replyRef}
+                                value={replyText}
+                                onChange={(e) => setReplyText(e.target.value)}
+                                placeholder="Escribe tu respuesta oficial aquí..."
+                                className="w-full px-0 py-2 bg-transparent text-white border-0 resize-none min-h-[140px] focus:ring-0 text-base leading-relaxed placeholder-zinc-600 overflow-hidden"
+                            />
 
-                        {/* Admin Reply Attachments */}
-                        <div className="mt-3">
-                            {replyAttachments.length > 0 && (
-                                <div className="flex gap-2 mb-2 flex-wrap">
-                                    {replyAttachments.map((file, index) => (
-                                        <div key={index} className="relative group">
-                                            <img
-                                                src={URL.createObjectURL(file)}
-                                                alt={`Attachment ${index + 1}`}
-                                                className="w-16 h-16 object-cover rounded-lg border border-zinc-700"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => removeReplyAttachment(index)}
-                                                className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                            >
-                                                ✕
-                                            </button>
+                            <div className="mt-6 flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-zinc-800">
+                                <div className="flex gap-3 items-center">
+                                    {replyAttachments.length > 0 && (
+                                        <div className="flex gap-2 mr-2">
+                                            {replyAttachments.map((file, index) => (
+                                                <div key={index} className="relative group animate-in fade-in zoom-in duration-200">
+                                                    <img
+                                                        src={URL.createObjectURL(file)}
+                                                        alt=""
+                                                        className="w-12 h-12 object-cover rounded-xl border border-zinc-700"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeReplyAttachment(index)}
+                                                        className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center border-2 border-zinc-900 active:scale-90 transition-all"
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
+                                    )}
+
+                                    {replyAttachments.length < 3 && ticket.status !== 'resolved' && (
+                                        <label className="flex items-center gap-2 px-4 py-2 bg-zinc-800 rounded-xl text-zinc-400 text-sm cursor-pointer hover:bg-zinc-700 hover:text-white transition-all active:scale-95 group">
+                                            <input
+                                                type="file"
+                                                accept="image/jpeg,image/png"
+                                                onChange={handleFileSelect}
+                                                className="hidden"
+                                                disabled={isUploading}
+                                            />
+                                            <span className="text-lg group-hover:rotate-12 transition-transform">📷</span>
+                                            {isUploading ? 'Subiendo...' : 'Adjuntar'}
+                                        </label>
+                                    )}
                                 </div>
-                            )}
 
-                            {replyAttachments.length < 3 && ticket.status !== 'resolved' && (
-                                <label className="inline-flex items-center gap-2 px-3 py-1.5 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-400 text-sm cursor-pointer hover:border-pink-500/50 transition-colors">
-                                    <input
-                                        type="file"
-                                        accept="image/jpeg,image/png"
-                                        onChange={handleFileSelect}
-                                        className="hidden"
-                                        disabled={isUploading}
-                                    />
-                                    {isUploading ? 'Subiendo...' : '📷 Adjuntar imagen'}
-                                </label>
-                            )}
-                        </div>
-
-                        <div className="flex gap-3 mt-4">
-                            <button
-                                onClick={handleReply}
-                                disabled={sending || !replyText.trim() || ticket.status === 'resolved'}
-                                className="flex-1 py-3 bg-yellow-500/20 text-yellow-400 rounded-xl font-semibold hover:bg-yellow-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                                {sending ? 'Enviando...' : '💬 Responder y Mantener En Curso'}
-                            </button>
-                            <button
-                                onClick={handleResolve}
-                                disabled={sending || ticket.status === 'resolved'}
-                                className="flex-1 py-3 bg-emerald-500/20 text-emerald-400 rounded-xl font-semibold hover:bg-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                                {sending ? 'Enviando...' : '✅ Resolver y Cerrar'}
-                            </button>
-                        </div>
-                        {ticket.status === 'resolved' && (
-                            <p className="text-emerald-400 text-sm mt-3 text-center">
-                                ✓ Este ticket ya fue resuelto
-                            </p>
-                        )}
-                    </div>
-
-                    {/* Internal Notes */}
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-                        <h3 className="font-semibold mb-4 flex items-center gap-2">
-                            <span>📝</span> Notas Internas
-                            <span className="text-xs text-zinc-500 font-normal">(Solo visible para admin)</span>
-                        </h3>
-                        <textarea
-                            value={internalNotes}
-                            onChange={(e) => setInternalNotes(e.target.value)}
-                            onBlur={() => updateTicket({ internal_notes: internalNotes })}
-                            placeholder="Añade notas privadas sobre este ticket..."
-                            className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white resize-none h-24 focus:border-pink-500 focus:outline-none"
-                        />
-                    </div>
-                </div>
-
-                {/* Sidebar */}
-                <div className="space-y-4">
-                    {/* Info Card */}
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-4">
-                        <h3 className="font-semibold text-sm text-zinc-400 uppercase tracking-wide">Información</h3>
-
-                        <div>
-                            <p className="text-xs text-zinc-500">Categoría</p>
-                            <p className="text-sm">{TOPIC_LABELS[ticket.topic] || ticket.topic}</p>
-                        </div>
-
-                        <div>
-                            <p className="text-xs text-zinc-500">Email</p>
-                            <p className="text-sm break-all">{ticket.email}</p>
-                        </div>
-
-                        {ticket.wallet_address && (
-                            <div>
-                                <p className="text-xs text-zinc-500">Wallet</p>
-                                <p className="text-xs font-mono text-zinc-400 break-all">{ticket.wallet_address}</p>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={handleReply}
+                                        disabled={sending || !replyText.trim() || ticket.status === 'resolved'}
+                                        className="px-6 py-2.5 bg-zinc-800 text-zinc-400 rounded-xl font-bold text-sm hover:bg-yellow-500/10 hover:text-yellow-500 disabled:opacity-50 transition-all active:scale-95 border border-zinc-700/50"
+                                    >
+                                        {sending ? '...' : 'Solo Responder'}
+                                    </button>
+                                    <button
+                                        onClick={handleResolve}
+                                        disabled={sending || ticket.status === 'resolved'}
+                                        className="px-8 py-2.5 bg-emerald-500 text-white rounded-xl font-bold text-sm hover:bg-emerald-600 shadow-lg shadow-emerald-500/20 disabled:opacity-50 transition-all active:scale-95"
+                                    >
+                                        {sending ? '...' : '✅ Resolver y Cerrar'}
+                                    </button>
+                                </div>
                             </div>
-                        )}
-
-                        <div>
-                            <p className="text-xs text-zinc-500">Idioma</p>
-                            <p className="text-sm">
-                                {LANGUAGES[ticket.language]?.flag || '🌐'} {LANGUAGES[ticket.language]?.name || ticket.language.toUpperCase()}
-                            </p>
+                            {ticket.status === 'resolved' && (
+                                <p className="text-emerald-500 font-bold text-xs mt-4 text-center bg-emerald-500/10 py-2 rounded-lg border border-emerald-500/20">
+                                    ✓ Este ticket ya fue marcado como resuelto
+                                </p>
+                            )}
                         </div>
-
-                        <div>
-                            <p className="text-xs text-zinc-500">Creado</p>
-                            <p className="text-sm">{formatDate(ticket.created_at)}</p>
-                        </div>
-
-                        {ticket.resolved_at && (
-                            <div>
-                                <p className="text-xs text-zinc-500">Resuelto</p>
-                                <p className="text-sm text-emerald-400">{formatDate(ticket.resolved_at)}</p>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Status Control */}
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
-                        <h3 className="font-semibold text-sm text-zinc-400 uppercase tracking-wide">Estado</h3>
-                        <select
-                            value={ticket.status}
-                            onChange={(e) => updateTicket({ status: e.target.value })}
-                            className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm"
-                        >
-                            <option value="new">🔵 Nuevo</option>
-                            <option value="in-progress">🟡 En Curso</option>
-                            <option value="resolved">🟢 Resuelto</option>
-                            <option value="re-opened">🟣 Re-abierto</option>
-                            <option value="closed">⚫ Cerrado</option>
-                        </select>
-                    </div>
-
-                    {/* Priority Control */}
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
-                        <h3 className="font-semibold text-sm text-zinc-400 uppercase tracking-wide">Prioridad</h3>
-                        <select
-                            value={ticket.priority}
-                            onChange={(e) => updateTicket({ priority: e.target.value })}
-                            className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm"
-                        >
-                            <option value="low">⚪ Baja</option>
-                            <option value="medium">🟡 Media</option>
-                            <option value="high">🔴 Alta</option>
-                        </select>
                     </div>
                 </div>
             </div>
