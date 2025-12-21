@@ -19,6 +19,11 @@ const nextConfig: NextConfig = {
         hostname: 'cdn.dexscreener.com',
         pathname: '/cms/images/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'magenta-wrong-impala-427.mypinata.cloud',
+        pathname: '/ipfs/**',
+      },
     ],
   },
 };
