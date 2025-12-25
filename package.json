@@ -1,6 +1,6 @@
 {
   "name": "orbid-wallet",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "OrbId Wallet - Your decentralized identity for World App",
   "private": true,
   "scripts": {
