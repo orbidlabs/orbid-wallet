@@ -3,8 +3,8 @@
 import { useMemo, useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import type { TokenBalance } from '@/lib/types';
-import { useTokenMarketData, ChartPeriod, PricePoint } from '@/hooks/useTokenMarketData';
+import type { TokenBalance, ChartPeriod, PricePoint } from '@/lib/types';
+import { useTokenMarketData } from '@/hooks/useTokenMarketData';
 import { useI18n } from '@/lib/i18n';
 import { formatPrice, formatTokenValue } from '@/lib/format';
 

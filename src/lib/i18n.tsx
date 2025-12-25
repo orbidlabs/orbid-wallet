@@ -130,6 +130,7 @@ export interface Translations {
         help: string;
         contact: string;
         followX: string;
+        followInstagram: string;
         version: string;
         tagline: string;
     };
@@ -162,6 +163,12 @@ export interface Translations {
         transactionReceived: string;
         transactionSent: string;
         notSupported: string;
+    };
+    relativeTime: {
+        justNow: string;
+        minutesAgo: string;
+        hoursAgo: string;
+        daysAgo: string;
     };
     // Newsletter
     newsletter: {
@@ -232,6 +239,17 @@ export interface Translations {
         sendMessage: string;
         messageSent: string;
         responseTime: string;
+        maxImages: string;
+        attachingImages: string;
+        uploading: string;
+        addImage: string;
+        checkStatus: string;
+        checkStatusDesc: string;
+        ticketId: string;
+        checking: string;
+        latestUpdate: string;
+        ticketNotFound: string;
+        noFaqs: string;
     };
     // Wallet/Login Screen
     wallet: {

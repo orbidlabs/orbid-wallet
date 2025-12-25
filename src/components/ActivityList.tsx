@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTransactionHistory, Transaction } from '@/hooks/useTransactionHistory';
+import { useTransactionHistory } from '@/hooks/useTransactionHistory';
+import { Transaction } from '@/lib/types';
 import { AnimatedButton, ModalBackdrop, ModalContent, FadeIn, StaggerContainer, StaggerItem, Pressable } from './ui/Motion';
 import { useI18n } from '@/lib/i18n';
 
@@ -97,13 +98,13 @@ function TransactionDetailModal({
                                 <div className="flex justify-between">
                                     <span className="text-zinc-500 text-sm">{t.activity.date}</span>
                                     <span className="text-white text-sm">
-                                        {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                        {date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                                     </span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-zinc-500 text-sm">{t.activity.time}</span>
                                     <span className="text-white text-sm">
-                                        {date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                                        {date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
                                     </span>
                                 </div>
                                 <div className="flex justify-between">

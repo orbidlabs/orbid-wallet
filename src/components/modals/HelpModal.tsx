@@ -71,10 +71,10 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
                 setTicketStatus(data);
                 setView('status-result');
             } else {
-                showToast({ type: 'error', title: 'Error', message: 'Ticket not found or invalid email' });
+                showToast({ type: 'error', title: 'Error', message: t.help.ticketNotFound });
             }
         } catch {
-            showToast({ type: 'error', title: 'Error', message: 'Connection error' });
+            showToast({ type: 'error', title: 'Error', message: t.common.error });
         } finally {
             setIsSubmitting(false);
         }
@@ -107,7 +107,7 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
         // Limit to 3 files max
         const newFiles = files.slice(0, 3 - attachments.length);
         if (newFiles.length === 0) {
-            showToast({ type: 'error', title: 'Error', message: 'Máximo 3 imágenes' });
+            showToast({ type: 'error', title: 'Error', message: t.help.maxImages });
             return;
         }
 
@@ -261,7 +261,7 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
                                                 <h3 className="text-white font-semibold mb-3">{t.help.faqTitle}</h3>
                                                 <div className="space-y-2">
                                                     {isLoadingFaqs ? (
-                                                        <p className="text-zinc-500 text-xs">Loading...</p>
+                                                        <p className="text-zinc-500 text-xs">{t.common.loading}</p>
                                                     ) : dynamicFaqs.length > 0 ? (
                                                         dynamicFaqs.map((faq, index) => (
                                                             <motion.div
@@ -276,7 +276,7 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
                                                             </motion.div>
                                                         ))
                                                     ) : (
-                                                        <p className="text-zinc-500 text-xs">No FAQs available</p>
+                                                        <p className="text-zinc-500 text-xs">{t.help.noFaqs || 'No FAQs available'}</p>
                                                     )}
                                                 </div>
                                             </div>
@@ -290,8 +290,8 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
                                             >
                                                 <span className="text-2xl">🔍</span>
                                                 <div className="flex-1">
-                                                    <p className="text-white font-medium text-sm">Check Ticket Status</p>
-                                                    <p className="text-zinc-500 text-xs">See updates on your support request</p>
+                                                    <p className="text-white font-medium text-sm">{t.help.checkStatus}</p>
+                                                    <p className="text-zinc-500 text-xs">{t.help.checkStatusDesc}</p>
                                                 </div>
                                                 <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -395,7 +395,7 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
                                         <FadeIn delay={0.12}>
                                             <div>
                                                 <label className="text-xs text-zinc-500 mb-1.5 block">
-                                                    📎 Adjuntar imágenes (opcional, máx. 3)
+                                                    📎 {t.help.attachingImages}
                                                 </label>
 
                                                 {/* Attachment previews */}
@@ -431,11 +431,11 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
                                                             disabled={isUploading}
                                                         />
                                                         {isUploading ? (
-                                                            <span className="text-sm">Subiendo...</span>
+                                                            <span className="text-sm">{t.help.uploading}</span>
                                                         ) : (
                                                             <>
                                                                 <span>📷</span>
-                                                                <span className="text-sm">Agregar imagen</span>
+                                                                <span className="text-sm">{t.help.addImage}</span>
                                                             </>
                                                         )}
                                                     </label>
@@ -506,12 +506,12 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
                                         className="space-y-4"
                                     >
                                         <div className="text-center mb-6">
-                                            <h3 className="text-lg font-bold text-white">Check Ticket Status</h3>
-                                            <p className="text-zinc-500 text-xs">Enter your details to track your request</p>
+                                            <h3 className="text-lg font-bold text-white">{t.help.checkStatus}</h3>
+                                            <p className="text-zinc-500 text-xs">{t.help.checkStatusDesc}</p>
                                         </div>
 
                                         <div>
-                                            <label className="text-xs text-zinc-500 mb-1.5 block">Ticket ID (e.g. T-123498)</label>
+                                            <label className="text-xs text-zinc-500 mb-1.5 block">{t.help.ticketId} (e.g. T-123498)</label>
                                             <input
                                                 type="text"
                                                 value={ticketId}
@@ -541,7 +541,7 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
                                             disabled={isSubmitting || !ticketId || !email}
                                             className="disabled:opacity-50"
                                         >
-                                            {isSubmitting ? 'Checking...' : 'Check Status'}
+                                            {isSubmitting ? t.help.checking : t.help.checkStatus}
                                         </AnimatedButton>
                                     </motion.form>
                                 )}
@@ -571,13 +571,13 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
 
                                         {ticketStatus.lastReply && (
                                             <div className="bg-zinc-800/50 rounded-xl p-4 text-left border border-white/5">
-                                                <p className="text-xs text-zinc-500 uppercase tracking-wider mb-2">Latest Update</p>
+                                                <p className="text-xs text-zinc-500 uppercase tracking-wider mb-2">{t.help.latestUpdate}</p>
                                                 <p className="text-sm text-zinc-300 whitespace-pre-wrap">{ticketStatus.lastReply}</p>
                                             </div>
                                         )}
 
                                         <AnimatedButton variant="glass" fullWidth onClick={() => setView('topics')}>
-                                            Back to Help
+                                            {t.common.back || 'Back'}
                                         </AnimatedButton>
                                     </motion.div>
                                 )}

@@ -12,7 +12,7 @@ interface AuthState {
     username: string | null;
     email: string | null;
     isInWorldApp: boolean;
-    isVerifiedHuman: boolean;
+    isVerifiedHuman: boolean; // Verified with Orb - persists in Supabase
     newsletterClosed: boolean;
 }
 
@@ -41,13 +41,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     const { isReady: miniKitReady, isInstalled: isInWorldApp } = useMiniKit();
 
-    // Initialize auth state from localStorage ONLY - no Supabase check
+    // Initialize - Just mark as ready, user must authenticate fresh
     const initAuth = useCallback(() => {
         const cached = localStorage.getItem(WALLET_CACHE_KEY);
         const cachedWallet = cached ? JSON.parse(cached) : null;
 
         if (!cachedWallet?.walletAddress) {
-            // No cached wallet - user needs to connect
+            // No session - user needs to connect
             setState({
                 isReady: true,
                 isAuthenticated: false,
@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             return;
         }
 
-        // Use cached data directly - no Supabase verification
+        // Has cached session - restore it
         setState({
             isReady: true,
             isAuthenticated: true,
@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, [miniKitReady, initAuth]);
 
-    // Login with World App - Creates session in Supabase AFTER MiniKit dialog
+    // Login with World App - Always shows MiniKit dialog
     const loginWithWorldApp = useCallback(async () => {
         if (!isInWorldApp) {
             return;
@@ -89,6 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
             const nonce = `${Date.now()}-${crypto.randomUUID()}`;
 
+            // This ALWAYS shows the MiniKit dialog
             const { finalPayload } = await MiniKit.commandsAsync.walletAuth({
                 nonce,
                 statement: 'Connect to OrbId Wallet',
@@ -98,21 +99,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 const address = finalPayload.address;
                 const username = MiniKit.user?.username || null;
 
-                // Save to Supabase
-                const res = await fetch('/api/auth/session', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ walletAddress: address, username }),
-                });
-                const data = await res.json();
+                // Check Supabase ONLY for Orb verification status
+                let isVerifiedHuman = false;
+                try {
+                    const res = await fetch(`/api/auth/orb-status?wallet=${address}`);
+                    const data = await res.json();
+                    isVerifiedHuman = data.isVerifiedHuman || false;
+                } catch {
+                    // If API fails, default to not verified
+                    isVerifiedHuman = false;
+                }
 
-                // Cache everything locally
+                // Save session to Supabase (creates/updates user record)
+                try {
+                    const res = await fetch('/api/auth/session', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ walletAddress: address, username }),
+                    });
+                    const data = await res.json();
+                    if (data.userId) {
+                        setAnalyticsUser(data.userId);
+                    }
+                } catch (error) {
+                    console.error('Failed to save session:', error);
+                }
+
+                // Cache locally
                 const cacheData = {
                     walletAddress: address,
                     username,
-                    email: data.email || null,
-                    isVerifiedHuman: data.isVerifiedHuman || false,
-                    newsletterClosed: !!data.email,
+                    isVerifiedHuman,
+                    newsletterClosed: false,
                 };
                 localStorage.setItem(WALLET_CACHE_KEY, JSON.stringify(cacheData));
 
@@ -121,13 +139,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     isAuthenticated: true,
                     walletAddress: address,
                     username,
-                    isVerifiedHuman: data.isVerifiedHuman || false,
-                    newsletterClosed: !!data.email,
+                    isVerifiedHuman,
+                    newsletterClosed: false,
                 }));
 
-                if (data.userId) {
-                    setAnalyticsUser(data.userId);
-                }
                 Analytics.login('worldapp');
             }
         } catch (error) {
@@ -150,7 +165,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const result = await res.json();
 
             if (result.success) {
-                // Update local cache
                 const cached = localStorage.getItem(WALLET_CACHE_KEY);
                 if (cached) {
                     const cacheData = JSON.parse(cached);
@@ -171,7 +185,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, [state.walletAddress, state.isVerifiedHuman]);
 
     const closeNewsletter = useCallback(() => {
-        // Update local cache
         const cached = localStorage.getItem(WALLET_CACHE_KEY);
         if (cached) {
             const cacheData = JSON.parse(cached);
@@ -181,8 +194,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setState(prev => ({ ...prev, newsletterClosed: true }));
     }, []);
 
+    // Update Orb verification status - saves to Supabase
     const setVerifiedHuman = useCallback((verified: boolean) => {
-        // Update local cache
         const cached = localStorage.getItem(WALLET_CACHE_KEY);
         if (cached) {
             const cacheData = JSON.parse(cached);
@@ -192,11 +205,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setState(prev => ({ ...prev, isVerifiedHuman: verified }));
     }, []);
 
-    // Logout - Clear everything
+    // Logout - Complete reset
     const logout = useCallback(() => {
-        localStorage.clear();
+        // Clear auth-related storage only
+        localStorage.removeItem(WALLET_CACHE_KEY);
+        localStorage.removeItem('orbid_world_id_verified');
+        localStorage.removeItem('notifications_enabled');
         sessionStorage.clear();
 
+        // Reset to initial state
         setState({
             isReady: true,
             isAuthenticated: false,

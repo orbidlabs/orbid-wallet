@@ -2,24 +2,12 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { WORLD_CHAIN_TOKENS } from '@/lib/tokens';
+import type { Transaction, TransactionStatus } from '@/lib/types';
+import { useI18n } from '@/lib/i18n';
 
-const ALCHEMY_API_KEY = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY;
+// Alchemy API Key from environment
+const ALCHEMY_API_KEY = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY || '';
 const ALCHEMY_URL = `https://worldchain-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`;
-
-export interface Transaction {
-    hash: string;
-    from: string;
-    to: string;
-    value: string;
-    timestamp: number;
-    blockNumber: string;
-    type: 'send' | 'receive' | 'swap' | 'contract';
-    status: 'confirmed' | 'pending' | 'failed';
-    tokenSymbol?: string;
-    tokenAmount?: string;
-    gasUsed?: string;
-    gasPrice?: string;
-}
 
 interface AlchemyTransfer {
     blockNum: string;
@@ -42,33 +30,35 @@ interface AlchemyResponse {
     };
 }
 
+const TRANSACTIONS_PER_PAGE = 10;
+
 // Find token info by address
 function getTokenByAddress(address: string) {
+    if (!address) return null;
     return WORLD_CHAIN_TOKENS.find(
-        t => t.address.toLowerCase() === address?.toLowerCase()
+        t => t.address.toLowerCase() === address.toLowerCase()
     );
 }
 
-// Format relative time
-function getRelativeTime(timestamp: number): string {
-    const now = Date.now();
-    const diff = now - timestamp;
+export function useTransactionHistory(walletAddress?: string) {
+    const { t } = useI18n();
 
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
+    const getRelativeTime = useCallback((timestamp: number): string => {
+        const now = Date.now();
+        const diff = now - timestamp;
 
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    if (days < 7) return `${days}d ago`;
+        const minutes = Math.floor(diff / 60000);
+        const hours = Math.floor(diff / 3600000);
+        const days = Math.floor(diff / 86400000);
 
-    return new Date(timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
+        if (minutes < 1) return t.relativeTime.justNow;
+        if (minutes < 60) return t.relativeTime.minutesAgo.replace('%s', minutes.toString());
+        if (hours < 24) return t.relativeTime.hoursAgo.replace('%s', hours.toString());
+        if (days < 7) return t.relativeTime.daysAgo.replace('%s', days.toString());
 
-const TRANSACTIONS_PER_PAGE = 10;
+        return new Date(timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    }, [t]);
 
-export function useTransactionHistory(walletAddress: string | null) {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -90,14 +80,12 @@ export function useTransactionHistory(walletAddress: string | null) {
             setIsLoadingMore(true);
         } else {
             setIsLoading(true);
-            // Reset on fresh load
             pageKeysRef.current = {};
             allTransactionsRef.current = [];
         }
         setError(null);
 
         try {
-            // Build params with pageKey if available
             const sentParams: Record<string, unknown> = {
                 fromAddress: walletAddress,
                 category: ['erc20', 'external'],
@@ -118,7 +106,6 @@ export function useTransactionHistory(walletAddress: string | null) {
                 receivedParams.pageKey = pageKeysRef.current.received;
             }
 
-            // Fetch both incoming and outgoing transfers
             const [sentRes, receivedRes] = await Promise.all([
                 fetch(ALCHEMY_URL, {
                     method: 'POST',
@@ -150,17 +137,14 @@ export function useTransactionHistory(walletAddress: string | null) {
             const sentTransfers: AlchemyTransfer[] = sentData.result?.transfers || [];
             const receivedTransfers: AlchemyTransfer[] = receivedData.result?.transfers || [];
 
-            // Store page keys for next load
             pageKeysRef.current = {
                 sent: sentData.result?.pageKey,
                 received: receivedData.result?.pageKey
             };
 
-            // Check if there are more pages
             const hasMorePages = !!(sentData.result?.pageKey || receivedData.result?.pageKey);
             setHasMore(hasMorePages);
 
-            // Get block timestamps for ALL unique blocks
             const allBlocks = [...new Set([
                 ...sentTransfers.map(t => t.blockNum),
                 ...receivedTransfers.map(t => t.blockNum)
@@ -191,57 +175,50 @@ export function useTransactionHistory(walletAddress: string | null) {
                 })
             );
 
-            // Process sent transactions
-            const sentTxs: Transaction[] = sentTransfers.map(t => {
-                const token = getTokenByAddress(t.rawContract?.address);
+            const sentTxs: Transaction[] = sentTransfers.map(tx => {
+                const token = getTokenByAddress(tx.rawContract?.address);
                 return {
-                    hash: t.hash,
-                    from: t.from,
-                    to: t.to,
-                    value: t.value?.toString() || '0',
-                    timestamp: blockTimestamps[t.blockNum] || Date.now(),
-                    blockNumber: t.blockNum,
+                    hash: tx.hash,
+                    from: tx.from,
+                    to: tx.to,
+                    value: tx.value?.toString() || '0',
+                    timestamp: blockTimestamps[tx.blockNum] || Date.now(),
+                    blockNumber: tx.blockNum,
                     type: 'send' as const,
                     status: 'confirmed' as const,
-                    tokenSymbol: token?.symbol || t.asset || 'ETH',
-                    tokenAmount: t.value?.toString() || '0'
+                    tokenSymbol: token?.symbol || tx.asset || 'ETH',
+                    tokenAmount: tx.value?.toString() || '0'
                 };
             });
 
-            // Process received transactions
-            const receivedTxs: Transaction[] = receivedTransfers.map(t => {
-                const token = getTokenByAddress(t.rawContract?.address);
+            const receivedTxs: Transaction[] = receivedTransfers.map(tx => {
+                const token = getTokenByAddress(tx.rawContract?.address);
                 return {
-                    hash: t.hash,
-                    from: t.from,
-                    to: t.to,
-                    value: t.value?.toString() || '0',
-                    timestamp: blockTimestamps[t.blockNum] || Date.now(),
-                    blockNumber: t.blockNum,
+                    hash: tx.hash,
+                    from: tx.from,
+                    to: tx.to,
+                    value: tx.value?.toString() || '0',
+                    timestamp: blockTimestamps[tx.blockNum] || Date.now(),
+                    blockNumber: tx.blockNum,
                     type: 'receive' as const,
                     status: 'confirmed' as const,
-                    tokenSymbol: token?.symbol || t.asset || 'ETH',
-                    tokenAmount: t.value?.toString() || '0'
+                    tokenSymbol: token?.symbol || tx.asset || 'ETH',
+                    tokenAmount: tx.value?.toString() || '0'
                 };
             });
 
-            // Combine new transactions
-            const newTxs = [...sentTxs, ...receivedTxs]
-                .sort((a, b) => b.timestamp - a.timestamp);
+            const newTxs = [...sentTxs, ...receivedTxs].sort((a, b) => b.timestamp - a.timestamp);
 
             if (isLoadMore) {
-                // Append new transactions to existing ones
                 const existingHashes = new Set(allTransactionsRef.current.map(t => t.hash));
                 const uniqueNewTxs = newTxs.filter(tx => !existingHashes.has(tx.hash));
                 allTransactionsRef.current = [...allTransactionsRef.current, ...uniqueNewTxs];
             } else {
-                // Fresh load - replace all
                 allTransactionsRef.current = newTxs.filter((tx, index, self) =>
                     index === self.findIndex(t => t.hash === tx.hash)
                 );
             }
 
-            // Sort by timestamp (newest first) and update state
             const sortedTxs = [...allTransactionsRef.current].sort((a, b) => b.timestamp - a.timestamp);
             setTransactions(sortedTxs);
 

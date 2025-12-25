@@ -15,31 +15,43 @@ export interface TokenBalance {
     change24h: number;
 }
 
+export type ChartPeriod = "1d" | "7d" | "30d" | "365d" | "max";
+
+export interface PricePoint {
+    timestamp: number;
+    price: number;
+    volume?: number;
+}
+
 export interface TokenMarketData {
     price: number;
     change24h: number;
     change7d: number;
     volume24h: number;
     marketCap: number;
-    liquidity: number;
     fdv: number;
-    priceHistory: { time: number; price: number }[];
+    high24h: number;
+    low24h: number;
+    priceHistory: PricePoint[];
 }
 
 // Transaction types
-export type TransactionType = 'send' | 'receive' | 'swap';
+export type TransactionType = 'send' | 'receive' | 'swap' | 'contract';
 export type TransactionStatus = 'pending' | 'confirmed' | 'failed';
 
 export interface Transaction {
-    id: string;
-    type: TransactionType;
-    tokenIn?: Token;
-    tokenOut?: Token;
-    amountIn: string;
-    amountOut?: string;
-    timestamp: Date;
     hash: string;
+    from: string;
+    to: string;
+    value: string;
+    timestamp: number;
+    blockNumber: string;
+    type: TransactionType;
     status: TransactionStatus;
+    tokenSymbol?: string;
+    tokenAmount?: string;
+    gasUsed?: string;
+    gasPrice?: string;
 }
 
 // Navigation

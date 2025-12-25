@@ -123,6 +123,10 @@ export default function WalletApp() {
                             {t.wallet.openInWorldApp}
                         </a>
 
+                        <div className="mt-6">
+                            <SocialLinks />
+                        </div>
+
                         <p className="mt-8 text-xs text-zinc-600">
                             {t.wallet.poweredBy}
                         </p>
@@ -169,6 +173,8 @@ export default function WalletApp() {
                         {' '}{t.wallet.and}{' '}
                         <a href="/legal/privacy" className="text-pink-400 hover:underline">{t.wallet.privacyLink}</a>
                     </p>
+
+                    <SocialLinks />
 
                     <p className="mt-4 text-xs text-zinc-600">
                         {t.wallet.poweredBy}

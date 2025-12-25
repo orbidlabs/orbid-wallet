@@ -99,6 +99,7 @@ export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
         const { email, walletAddress, isVerifiedHuman } = body;
+        const isOrbVerified = isVerifiedHuman; // Use the same value for now
 
         if (!walletAddress && !email) {
             return NextResponse.json({ error: 'No identifier provided' }, { status: 400 });
@@ -135,7 +136,7 @@ export async function POST(request: NextRequest) {
         if (walletAddress) {
             const { data: existingByWallet } = await supabase
                 .from('analytics_users')
-                .select('id, email, total_logins, is_verified_human')
+                .select('id, email, total_logins, is_orb_verified')
                 .eq('wallet_address', walletAddress)
                 .maybeSingle();
 
@@ -147,7 +148,7 @@ export async function POST(request: NextRequest) {
                     total_logins: (existingByWallet.total_logins || 0) + 1,
                     ...trackingData,
                     ...(email && { email }),
-                    ...(isVerifiedHuman === true && { is_verified_human: true })
+                    ...(isOrbVerified === true && { is_orb_verified: true, is_verified_human: true })
                 };
 
                 await supabase.from('analytics_users').update(updateData).eq('id', existingByWallet.id);
@@ -171,7 +172,7 @@ export async function POST(request: NextRequest) {
                         updated_at: new Date().toISOString(),
                         total_logins: (existingByEmail.total_logins || 0) + 1,
                         ...trackingData,
-                        ...(isVerifiedHuman === true && { is_verified_human: true })
+                        ...(isOrbVerified === true && { is_orb_verified: true, is_verified_human: true })
                     }).eq('id', existingByEmail.id);
 
                     return NextResponse.json({ success: true, userId: existingByEmail.id });
@@ -181,7 +182,8 @@ export async function POST(request: NextRequest) {
             const insertData = {
                 email: email || null,
                 wallet_address: walletAddress,
-                is_verified_human: isVerifiedHuman === true,
+                is_orb_verified: isOrbVerified === true,
+                is_verified_human: isOrbVerified === true,
                 ...trackingData,
                 total_logins: 1
             };

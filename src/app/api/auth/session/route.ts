@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
         const { data: user, error } = await supabase
             .from('analytics_users')
-            .select('id, wallet_address, email, username, is_verified_human, created_at, last_seen_at')
+            .select('id, wallet_address, email, username, is_orb_verified, is_verified_human, created_at, last_seen_at')
             .eq('wallet_address', walletAddress.toLowerCase())
             .single();
 
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
                 walletAddress: user.wallet_address,
                 email: user.email,
                 username: user.username,
-                isVerifiedHuman: user.is_verified_human,
+                isVerifiedHuman: user.is_orb_verified || user.is_verified_human,
                 createdAt: user.created_at,
             }
         });
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
         // Check if user exists
         const { data: existingUser } = await supabase
             .from('analytics_users')
-            .select('id, is_verified_human, email, username')
+            .select('id, is_orb_verified, is_verified_human, email, username')
             .eq('wallet_address', walletLower)
             .single();
 
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
                 success: true,
                 userId: existingUser.id,
                 isNew: false,
-                isVerifiedHuman: existingUser.is_verified_human,
+                isVerifiedHuman: existingUser.is_orb_verified || existingUser.is_verified_human,
                 email: existingUser.email,
                 username: existingUser.username
             });
@@ -93,6 +93,7 @@ export async function POST(request: NextRequest) {
                 .insert({
                     wallet_address: walletLower,
                     username: username || null,
+                    is_orb_verified: false,
                     is_verified_human: false,
                     created_at: new Date().toISOString(),
                     last_seen_at: new Date().toISOString(),
