@@ -34,6 +34,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IPermit2__factory>;
     getContractFactory(
+      name: "IUniswapV2Router",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IUniswapV2Router__factory>;
+    getContractFactory(
       name: "OrbIdSwapRelay",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.OrbIdSwapRelay__factory>;
@@ -64,6 +68,11 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.IPermit2>;
     getContractAt(
+      name: "IUniswapV2Router",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IUniswapV2Router>;
+    getContractAt(
       name: "OrbIdSwapRelay",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -90,6 +99,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IPermit2>;
     deployContract(
+      name: "IUniswapV2Router",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IUniswapV2Router>;
+    deployContract(
       name: "OrbIdSwapRelay",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.OrbIdSwapRelay>;
@@ -119,6 +132,11 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IPermit2>;
+    deployContract(
+      name: "IUniswapV2Router",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IUniswapV2Router>;
     deployContract(
       name: "OrbIdSwapRelay",
       args: any[],

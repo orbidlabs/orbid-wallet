@@ -2,4 +2,5 @@
 /* tslint:disable */
 /* eslint-disable */
 export type { IPermit2 } from "./IPermit2";
+export type { IUniswapV2Router } from "./IUniswapV2Router";
 export type { OrbIdSwapRelay } from "./OrbIdSwapRelay";

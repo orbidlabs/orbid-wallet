@@ -45,14 +45,14 @@ const config: HardhatUserConfig = {
     },
     etherscan: {
         apiKey: {
-            worldchain: process.env.WORLDSCAN_API_KEY || "",
+            worldchain: process.env.ETHERSCAN_API_KEY || "",
         },
         customChains: [
             {
                 network: "worldchain",
                 chainId: 480,
                 urls: {
-                    apiURL: "https://worldscan.org/api",
+                    apiURL: "https://api.worldscan.org/api",
                     browserURL: "https://worldscan.org",
                 },
             },

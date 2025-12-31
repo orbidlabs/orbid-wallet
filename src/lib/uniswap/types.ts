@@ -40,7 +40,7 @@ export interface SwapParams {
     amountOutMin: bigint;
     poolFee: number;
     deadline: bigint;
-    useV4: boolean;
+    version: 0 | 1 | 2; // V2=0, V3=1, V4=2 (matches contract SwapVersion enum)
 }
 
 export interface PermitTransferFrom {

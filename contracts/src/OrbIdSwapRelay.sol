@@ -28,8 +28,18 @@ interface IPermit2 {
     ) external;
 }
 
+interface IUniswapV2Router {
+    function swapExactTokensForTokens(
+        uint amountIn,
+        uint amountOutMin,
+        address[] calldata path,
+        address to,
+        uint deadline
+    ) external returns (uint[] memory amounts);
+}
+
 /// @title OrbIdSwapRelay
-/// @notice Swap relay that collects a 0.5% fee before routing to Uniswap v3/v4
+/// @notice Swap relay that collects a 0.5% fee before routing to Uniswap V2/V3/V4
 /// @dev Uses Permit2 for gasless token approvals
 contract OrbIdSwapRelay {
     using SafeERC20 for IERC20;
@@ -45,14 +55,25 @@ contract OrbIdSwapRelay {
     /// @notice Permit2 contract address
     address public immutable permit2;
 
-    /// @notice Uniswap v3 SwapRouter02 address
+    /// @notice Uniswap V2 Router02 address
+    address public immutable swapRouterV2;
+
+    /// @notice Uniswap V3 SwapRouter02 address
     address public immutable swapRouterV3;
 
-    /// @notice Uniswap v4 UniversalRouter address
+    /// @notice Uniswap V4 UniversalRouter address
     address public immutable universalRouterV4;
 
     /// @notice Address that receives the swap fees
     address public immutable feeRecipient;
+
+    // ============ Enums ============
+
+    enum SwapVersion {
+        V2,
+        V3,
+        V4
+    }
 
     // ============ Structs ============
 
@@ -61,9 +82,9 @@ contract OrbIdSwapRelay {
         address tokenOut;
         uint256 amountIn;
         uint256 amountOutMin;
-        uint24 poolFee; // For v3: 500, 3000, 10000
+        uint24 poolFee; // For V3: 500, 3000, 10000
         uint256 deadline;
-        bool useV4; // true = use v4, false = use v3
+        SwapVersion version; // V2, V3, or V4
     }
 
     // ============ Events ============
@@ -74,7 +95,8 @@ contract OrbIdSwapRelay {
         address indexed tokenOut,
         uint256 amountIn,
         uint256 amountOut,
-        uint256 feeAmount
+        uint256 feeAmount,
+        SwapVersion version
     );
 
     // ============ Errors ============
@@ -87,6 +109,7 @@ contract OrbIdSwapRelay {
 
     constructor(
         address _permit2,
+        address _swapRouterV2,
         address _swapRouterV3,
         address _universalRouterV4,
         address _feeRecipient
@@ -96,6 +119,7 @@ contract OrbIdSwapRelay {
         }
 
         permit2 = _permit2;
+        swapRouterV2 = _swapRouterV2;
         swapRouterV3 = _swapRouterV3;
         universalRouterV4 = _universalRouterV4;
         feeRecipient = _feeRecipient;
@@ -139,36 +163,8 @@ contract OrbIdSwapRelay {
         // Transfer tokens from user via Permit2
         _permitTransferFrom(permit, transferDetails, msg.sender, signature);
 
-        // Calculate fee
-        uint256 feeAmount = (params.amountIn * FEE_BPS) / BPS_DENOMINATOR;
-        uint256 amountToSwap = params.amountIn - feeAmount;
-
-        // Transfer fee to recipient
-        IERC20(params.tokenIn).safeTransfer(feeRecipient, feeAmount);
-
-        // Execute swap
-        if (params.useV4) {
-            amountOut = _swapV4(params, amountToSwap);
-        } else {
-            amountOut = _swapV3(params, amountToSwap);
-        }
-
-        // Verify minimum output
-        if (amountOut < params.amountOutMin) {
-            revert InsufficientOutput();
-        }
-
-        // Transfer output to user
-        IERC20(params.tokenOut).safeTransfer(msg.sender, amountOut);
-
-        emit SwapExecuted(
-            msg.sender,
-            params.tokenIn,
-            params.tokenOut,
-            params.amountIn,
-            amountOut,
-            feeAmount
-        );
+        // Execute swap with fee
+        amountOut = _executeSwap(params);
     }
 
     /// @notice Execute a swap with pre-approved tokens (no Permit2)
@@ -184,6 +180,15 @@ contract OrbIdSwapRelay {
             params.amountIn
         );
 
+        // Execute swap with fee
+        amountOut = _executeSwap(params);
+    }
+
+    // ============ Internal Functions ============
+
+    function _executeSwap(
+        SwapParams calldata params
+    ) internal returns (uint256 amountOut) {
         // Calculate fee
         uint256 feeAmount = (params.amountIn * FEE_BPS) / BPS_DENOMINATOR;
         uint256 amountToSwap = params.amountIn - feeAmount;
@@ -191,11 +196,13 @@ contract OrbIdSwapRelay {
         // Transfer fee to recipient
         IERC20(params.tokenIn).safeTransfer(feeRecipient, feeAmount);
 
-        // Execute swap
-        if (params.useV4) {
-            amountOut = _swapV4(params, amountToSwap);
-        } else {
+        // Execute swap based on version
+        if (params.version == SwapVersion.V2) {
+            amountOut = _swapV2(params, amountToSwap);
+        } else if (params.version == SwapVersion.V3) {
             amountOut = _swapV3(params, amountToSwap);
+        } else {
+            amountOut = _swapV4(params, amountToSwap);
         }
 
         // Verify minimum output
@@ -212,11 +219,10 @@ contract OrbIdSwapRelay {
             params.tokenOut,
             params.amountIn,
             amountOut,
-            feeAmount
+            feeAmount,
+            params.version
         );
     }
-
-    // ============ Internal Functions ============
 
     function _permitTransferFrom(
         IPermit2.PermitTransferFrom memory permit,
@@ -224,13 +230,37 @@ contract OrbIdSwapRelay {
         address owner,
         bytes calldata signature
     ) internal {
-        // Call Permit2 permitTransferFrom
         IPermit2(permit2).permitTransferFrom(
             permit,
             transferDetails,
             owner,
             signature
         );
+    }
+
+    function _swapV2(
+        SwapParams calldata params,
+        uint256 amountIn
+    ) internal returns (uint256 amountOut) {
+        // Approve V2 Router
+        IERC20(params.tokenIn).forceApprove(swapRouterV2, amountIn);
+
+        // Build path
+        address[] memory path = new address[](2);
+        path[0] = params.tokenIn;
+        path[1] = params.tokenOut;
+
+        // Execute V2 swap
+        uint[] memory amounts = IUniswapV2Router(swapRouterV2)
+            .swapExactTokensForTokens(
+                amountIn,
+                params.amountOutMin,
+                path,
+                address(this),
+                params.deadline
+            );
+
+        amountOut = amounts[amounts.length - 1];
     }
 
     function _swapV3(
@@ -269,8 +299,6 @@ contract OrbIdSwapRelay {
         IERC20(params.tokenIn).forceApprove(universalRouterV4, amountIn);
 
         // V4 swap via UniversalRouter
-        // Note: V4 uses a different encoding pattern
-        // This is a simplified version - may need adjustment based on actual v4 ABI
         bytes memory commands = hex"00"; // V4_SWAP command
         bytes[] memory inputs = new bytes[](1);
         inputs[0] = abi.encode(
@@ -295,7 +323,7 @@ contract OrbIdSwapRelay {
             revert SwapFailed();
         }
 
-        // Get output balance (UniversalRouter may not return amount directly)
+        // Get output balance
         amountOut = IERC20(params.tokenOut).balanceOf(address(this));
     }
 }

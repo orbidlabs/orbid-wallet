@@ -16,5 +16,7 @@ export type { IERC165 } from "./@openzeppelin/contracts/utils/introspection/IERC
 export { IERC165__factory } from "./factories/@openzeppelin/contracts/utils/introspection/IERC165__factory";
 export type { IPermit2 } from "./src/OrbIdSwapRelay.sol/IPermit2";
 export { IPermit2__factory } from "./factories/src/OrbIdSwapRelay.sol/IPermit2__factory";
+export type { IUniswapV2Router } from "./src/OrbIdSwapRelay.sol/IUniswapV2Router";
+export { IUniswapV2Router__factory } from "./factories/src/OrbIdSwapRelay.sol/IUniswapV2Router__factory";
 export type { OrbIdSwapRelay } from "./src/OrbIdSwapRelay.sol/OrbIdSwapRelay";
 export { OrbIdSwapRelay__factory } from "./factories/src/OrbIdSwapRelay.sol/OrbIdSwapRelay__factory";

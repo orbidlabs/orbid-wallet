@@ -31,7 +31,7 @@ export declare namespace OrbIdSwapRelay {
     amountOutMin: BigNumberish;
     poolFee: BigNumberish;
     deadline: BigNumberish;
-    useV4: boolean;
+    version: BigNumberish;
   };
 
   export type SwapParamsStructOutput = [
@@ -41,7 +41,7 @@ export declare namespace OrbIdSwapRelay {
     amountOutMin: bigint,
     poolFee: bigint,
     deadline: bigint,
-    useV4: boolean
+    version: bigint
   ] & {
     tokenIn: string;
     tokenOut: string;
@@ -49,7 +49,7 @@ export declare namespace OrbIdSwapRelay {
     amountOutMin: bigint;
     poolFee: bigint;
     deadline: bigint;
-    useV4: boolean;
+    version: bigint;
   };
 }
 
@@ -61,6 +61,7 @@ export interface OrbIdSwapRelayInterface extends Interface {
       | "feeRecipient"
       | "permit2"
       | "swap"
+      | "swapRouterV2"
       | "swapRouterV3"
       | "swapWithPermit"
       | "universalRouterV4"
@@ -81,6 +82,10 @@ export interface OrbIdSwapRelayInterface extends Interface {
   encodeFunctionData(
     functionFragment: "swap",
     values: [OrbIdSwapRelay.SwapParamsStruct]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "swapRouterV2",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "swapRouterV3",
@@ -107,6 +112,10 @@ export interface OrbIdSwapRelayInterface extends Interface {
   decodeFunctionResult(functionFragment: "permit2", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "swap", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "swapRouterV2",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "swapRouterV3",
     data: BytesLike
   ): Result;
@@ -127,7 +136,8 @@ export namespace SwapExecutedEvent {
     tokenOut: AddressLike,
     amountIn: BigNumberish,
     amountOut: BigNumberish,
-    feeAmount: BigNumberish
+    feeAmount: BigNumberish,
+    version: BigNumberish
   ];
   export type OutputTuple = [
     user: string,
@@ -135,7 +145,8 @@ export namespace SwapExecutedEvent {
     tokenOut: string,
     amountIn: bigint,
     amountOut: bigint,
-    feeAmount: bigint
+    feeAmount: bigint,
+    version: bigint
   ];
   export interface OutputObject {
     user: string;
@@ -144,6 +155,7 @@ export namespace SwapExecutedEvent {
     amountIn: bigint;
     amountOut: bigint;
     feeAmount: bigint;
+    version: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -208,6 +220,8 @@ export interface OrbIdSwapRelay extends BaseContract {
     "nonpayable"
   >;
 
+  swapRouterV2: TypedContractMethod<[], [string], "view">;
+
   swapRouterV3: TypedContractMethod<[], [string], "view">;
 
   swapWithPermit: TypedContractMethod<
@@ -246,6 +260,9 @@ export interface OrbIdSwapRelay extends BaseContract {
     "nonpayable"
   >;
   getFunction(
+    nameOrSignature: "swapRouterV2"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
     nameOrSignature: "swapRouterV3"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
@@ -272,7 +289,7 @@ export interface OrbIdSwapRelay extends BaseContract {
   >;
 
   filters: {
-    "SwapExecuted(address,address,address,uint256,uint256,uint256)": TypedContractEvent<
+    "SwapExecuted(address,address,address,uint256,uint256,uint256,uint8)": TypedContractEvent<
       SwapExecutedEvent.InputTuple,
       SwapExecutedEvent.OutputTuple,
       SwapExecutedEvent.OutputObject

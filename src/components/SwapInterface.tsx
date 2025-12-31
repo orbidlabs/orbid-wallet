@@ -7,6 +7,8 @@ import { useI18n } from '@/lib/i18n';
 import { useAuth } from '@/lib/AuthContext';
 import { useWalletBalances } from '@/hooks/useWalletBalances';
 import { useSwapQuote } from '@/hooks/useSwapQuote';
+import { useSwap } from '@/hooks/useSwap';
+import { useToast } from '@/lib/ToastContext';
 import { ORBID_SWAP_RELAY_ADDRESS, SWAP_CONFIG } from '@/lib/uniswap/config';
 import TokenSelector from './swap/TokenSelector';
 import AmountInput from './swap/AmountInput';
@@ -20,6 +22,7 @@ const WORLD_CHAIN_RPC = process.env.NEXT_PUBLIC_ALCHEMY_RPC_URL || 'https://worl
 
 export default function SwapInterface() {
     const { t } = useI18n();
+    const { showToast } = useToast();
     const { walletAddress } = useAuth();
     const { balances } = useWalletBalances(walletAddress || '');
 
@@ -112,13 +115,43 @@ export default function SwapInterface() {
     const isContractDeployed = !!ORBID_SWAP_RELAY_ADDRESS && ORBID_SWAP_RELAY_ADDRESS !== '0x';
     const canSwap = tokenIn && tokenOut && amountIn && quote && !isQuoteLoading;
 
-    // Execute swap (placeholder)
+    // Initialize swap hook
+    const { state: swapState, executeSwap, reset: resetSwap } = useSwap({
+        tokenIn: swapTokenIn,
+        tokenOut: swapTokenOut,
+        quote,
+        walletAddress: walletAddress || '',
+        slippageBps: Math.round(slippage * 100),
+    });
+
+    // Handle swap state changes
+    useEffect(() => {
+        if (swapState.status === 'success') {
+            showToast({
+                type: 'success',
+                title: 'Swap Successful',
+                message: `Swapped ${amountIn} ${tokenIn?.symbol} for ${tokenOut?.symbol}`,
+                txHash: swapState.txHash || undefined,
+            });
+            // Reset form after successful swap
+            setAmountIn('');
+            resetSwap();
+        } else if (swapState.status === 'error') {
+            showToast({
+                type: 'error',
+                title: 'Swap Failed',
+                message: swapState.error || 'Transaction failed',
+            });
+            resetSwap();
+        }
+    }, [swapState.status, swapState.txHash, swapState.error, tokenIn, tokenOut, amountIn, showToast, resetSwap]);
+
+    // Execute swap
     const handleSwap = async () => {
         if (!canSwap) return;
         setIsSwapping(true);
         try {
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            alert('Swap functionality coming soon!');
+            await executeSwap();
         } finally {
             setIsSwapping(false);
         }
