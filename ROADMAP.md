@@ -9,13 +9,13 @@
 - [x] Admin panel for tickets
 
 ## 🔲 v1.1 (Next)
-- [ ] Swap (Uniswap integration)
-- [ ] Fiat on-ramp (buy crypto with card)
+- [x] Swap (Uniswap integration)
 - [ ] Grant claims
-
-## 🔲 v1.2
 - [ ] Send to @username
 - [ ] Address book
+
+## 🔲 v1.2
+- [ ] Fiat on-ramp (buy crypto with card)
 - [ ] Activity filters
 - [ ] NFT display
 

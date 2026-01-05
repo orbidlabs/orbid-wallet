@@ -24,6 +24,7 @@ const SendModal = lazy(() => import('./modals/SendModal'));
 const ReceiveModal = lazy(() => import('./modals/ReceiveModal'));
 const BuyModal = lazy(() => import('./modals/BuyModal'));
 const SettingsModal = lazy(() => import('./modals/SettingsModal'));
+const GrantModal = lazy(() => import('./modals/GrantModal'));
 
 // Loading fallback for modals
 const ModalLoader = () => (
@@ -57,6 +58,7 @@ export default function WalletApp() {
 
     const { balances, isLoading: balancesLoading, totalValueUSD } = useWalletBalances(walletAddress);
     const wldBalance = balances.find(b => b.token.symbol === 'WLD')?.balance || '0';
+    const [showGrantModal, setShowGrantModal] = useState(false);
 
     // Loading state
     if (!isReady) {
@@ -248,6 +250,7 @@ export default function WalletApp() {
                                 onSend={() => setShowSendModal(true)}
                                 onReceive={() => setShowReceiveModal(true)}
                                 onBuy={() => setShowBuyModal(true)}
+                                onGrant={() => setShowGrantModal(true)}
                             />
                             <div className="flex flex-col gap-4"> {/* 16px gap between secondary items */}
                                 <WorldIDVerify />
@@ -337,6 +340,13 @@ export default function WalletApp() {
                 )}
 
                 <NewsletterModal />
+                {showGrantModal && (
+                    <GrantModal
+                        isOpen={showGrantModal}
+                        onClose={() => setShowGrantModal(false)}
+                        walletAddress={walletAddress!}
+                    />
+                )}
             </Suspense>
         </div>
     );
