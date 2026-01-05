@@ -1,4 +1,4 @@
-// Types for Uniswap Swap functionality
+
 
 export interface Token {
     address: string;
@@ -6,6 +6,8 @@ export interface Token {
     name: string;
     decimals: number;
     logoURI?: string;
+    buyTax?: number;
+    sellTax?: number;
 }
 
 export interface SwapQuote {
@@ -40,7 +42,7 @@ export interface SwapParams {
     amountOutMin: bigint;
     poolFee: number;
     deadline: bigint;
-    version: 0 | 1 | 2; // V2=0, V3=1, V4=2 (matches contract SwapVersion enum)
+    version: 0 | 1 | 2;
 }
 
 export interface PermitTransferFrom {

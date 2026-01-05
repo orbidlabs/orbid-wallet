@@ -92,8 +92,8 @@ export default function WalletApp() {
 
                     <div className="relative max-w-sm w-full text-center">
                         {/* Logo */}
-                        <div className="w-24 h-24 mx-auto mb-6">
-                            <Image src="/logo.svg" alt="OrbId" width={96} height={96} priority />
+                        <div className="w-24 h-24 mx-auto mb-6 relative">
+                            <Image src="/logo.svg" alt="OrbId" fill sizes="96px" priority />
                         </div>
 
                         <h1 className="text-3xl font-display font-bold text-white mb-2 tracking-tight">
@@ -153,8 +153,8 @@ export default function WalletApp() {
 
                 <div className="relative max-w-xs w-full text-center">
                     {/* Logo - smaller for mobile */}
-                    <div className="w-20 h-20 mx-auto mb-6">
-                        <Image src="/logo.svg" alt="OrbId" width={80} height={80} priority />
+                    <div className="w-20 h-20 mx-auto mb-6 relative">
+                        <Image src="/logo.svg" alt="OrbId" fill sizes="80px" priority />
                     </div>
 
                     <h1 className="text-2xl font-display font-bold text-white mb-2 tracking-tight">

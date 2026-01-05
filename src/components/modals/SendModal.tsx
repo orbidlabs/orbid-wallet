@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import TokenIcon from '../ui/TokenIcon';
 import { AnimatePresence, motion } from 'framer-motion';
 import { MiniKit } from '@worldcoin/minikit-js';
 import { parseUnits } from 'viem';
@@ -275,9 +276,12 @@ export default function SendModal({ isOpen, onClose, balances, initialToken }: S
                                                 <StaggerItem key={item.token.symbol}>
                                                     <Pressable onClick={() => handleSelectToken(item)} className="w-full flex items-center justify-between p-3 glass rounded-xl text-left">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="relative w-10 h-10 rounded-full overflow-hidden bg-zinc-800">
-                                                                <Image src={item.token.logoURI} alt={item.token.name} fill className="object-cover" />
-                                                            </div>
+                                                            <TokenIcon
+                                                                symbol={item.token.symbol}
+                                                                name={item.token.name}
+                                                                logoURI={item.token.logoURI}
+                                                                size={40}
+                                                            />
                                                             <div>
                                                                 <p className="font-medium text-white">{item.token.symbol}</p>
                                                                 <p className="text-xs text-zinc-500">{item.token.name}</p>
@@ -298,9 +302,12 @@ export default function SendModal({ isOpen, onClose, balances, initialToken }: S
                                 {step === 'form' && selectedToken && (
                                     <motion.div key="form" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-4">
                                         <div className="flex items-center gap-3 p-3 glass rounded-xl">
-                                            <div className="relative w-10 h-10 rounded-full overflow-hidden bg-zinc-800">
-                                                <Image src={selectedToken.token.logoURI} alt={selectedToken.token.name} fill className="object-cover" />
-                                            </div>
+                                            <TokenIcon
+                                                symbol={selectedToken.token.symbol}
+                                                name={selectedToken.token.name}
+                                                logoURI={selectedToken.token.logoURI}
+                                                size={40}
+                                            />
                                             <div>
                                                 <p className="font-medium text-white">{selectedToken.token.symbol}</p>
                                                 <p className="text-xs text-zinc-500">{t.tokens.balance}: {parseFloat(selectedToken.balance).toFixed(4)}</p>
@@ -354,9 +361,13 @@ export default function SendModal({ isOpen, onClose, balances, initialToken }: S
                                 {step === 'confirm' && selectedToken && (
                                     <motion.div key="confirm" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-4">
                                         <FadeIn className="text-center py-2">
-                                            <div className="relative w-16 h-16 mx-auto mb-4 rounded-full overflow-hidden bg-zinc-800">
-                                                <Image src={selectedToken.token.logoURI} alt={selectedToken.token.name} fill className="object-cover" />
-                                            </div>
+                                            <TokenIcon
+                                                symbol={selectedToken.token.symbol}
+                                                name={selectedToken.token.name}
+                                                logoURI={selectedToken.token.logoURI}
+                                                size={64}
+                                                className="mx-auto mb-4"
+                                            />
                                             <p className="text-3xl font-bold text-white mb-1">{amount} {selectedToken.token.symbol}</p>
                                             <p className="text-zinc-500">≈ ${(parseFloat(amount) * (selectedToken.valueUSD / parseFloat(selectedToken.balance || '1'))).toFixed(2)} USD</p>
                                         </FadeIn>

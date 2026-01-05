@@ -1,12 +1,14 @@
-// Token types
+
 export interface Token {
     symbol: string;
     name: string;
     address: string;
     decimals: number;
-    logoURI: string;
-    isNative?: boolean; // true for WLD (direct transfer), false/undefined for ERC-20 (Permit2)
-    pools?: string[]; // GeckoTerminal pool addresses for chart data
+    logoURI?: string;
+    isNative?: boolean;
+    pools?: string[];
+    buyTax?: number;
+    sellTax?: number;
 }
 
 export interface TokenBalance {
@@ -31,12 +33,13 @@ export interface TokenMarketData {
     volume24h: number;
     marketCap: number;
     fdv: number;
+    tvl?: number;
     high24h: number;
     low24h: number;
     priceHistory: PricePoint[];
 }
 
-// Transaction types
+
 export type TransactionType = 'send' | 'receive' | 'swap' | 'contract';
 export type TransactionStatus = 'pending' | 'confirmed' | 'failed';
 
@@ -55,5 +58,5 @@ export interface Transaction {
     gasPrice?: string;
 }
 
-// Navigation
+
 export type TabType = 'wallet' | 'swap' | 'activity';

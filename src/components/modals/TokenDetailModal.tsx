@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import type { TokenBalance, ChartPeriod, PricePoint } from '@/lib/types';
 import { useTokenMarketData } from '@/hooks/useTokenMarketData';
+import TokenIcon from '../ui/TokenIcon';
 import { useI18n } from '@/lib/i18n';
 import { formatPrice, formatTokenValue } from '@/lib/format';
 
@@ -173,9 +174,12 @@ export default function TokenDetailModal({ tokenBalance, isOpen, onClose, onSend
                 {/* Header */}
                 <div className="sticky top-0 glass-strong px-4 py-3 flex items-center justify-between border-b border-white/5">
                     <div className="flex items-center gap-3">
-                        <div className="relative w-10 h-10 rounded-full overflow-hidden bg-zinc-800">
-                            <Image src={token.logoURI} alt={token.name} fill className="object-cover" />
-                        </div>
+                        <TokenIcon
+                            symbol={token.symbol}
+                            name={token.name}
+                            logoURI={token.logoURI}
+                            size={40}
+                        />
                         <div>
                             <h2 className="text-lg font-bold text-white">{token.name}</h2>
                             <p className="text-xs text-zinc-500">{token.symbol}</p>
@@ -399,6 +403,10 @@ export default function TokenDetailModal({ tokenBalance, isOpen, onClose, onSend
                             <div className="glass rounded-xl p-3">
                                 <p className="text-[10px] text-zinc-500 mb-1">{t.tokenDetail.fdv}</p>
                                 <p className="text-sm font-semibold text-white">{formatNumber(marketData.fdv)}</p>
+                            </div>
+                            <div className="glass rounded-xl p-3">
+                                <p className="text-[10px] text-zinc-500 mb-1">{t.tokenDetail.tvl}</p>
+                                <p className="text-sm font-semibold text-white">{formatNumber(marketData.tvl || 0)}</p>
                             </div>
                         </div>
                     ) : (

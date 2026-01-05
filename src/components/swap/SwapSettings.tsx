@@ -37,7 +37,7 @@ export default function SwapSettings({
         const newDefault = !useUniswapDefault;
         setUseUniswapDefault(newDefault);
         if (newDefault) {
-            // Reset to use all pools when default is enabled
+
             onPoolSettingsChange(true, true, true);
         }
     };
@@ -62,7 +62,7 @@ export default function SwapSettings({
 
     return (
         <div className="relative">
-            {/* Settings Button - Responsive size */}
+
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl hover:bg-white/5 transition-colors group"
@@ -88,7 +88,7 @@ export default function SwapSettings({
                 </svg>
             </button>
 
-            {/* Settings Panel */}
+
             <AnimatePresence>
                 {isOpen && (
                     <>
@@ -101,7 +101,7 @@ export default function SwapSettings({
                             onClick={() => setIsOpen(false)}
                         />
 
-                        {/* Panel - Responsive positioning and sizing */}
+
                         <motion.div
                             initial={{ opacity: 0, y: -10, scale: 0.95 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -109,10 +109,10 @@ export default function SwapSettings({
                             transition={{ duration: 0.15 }}
                             className="fixed sm:absolute left-2 right-2 sm:left-auto sm:right-0 top-auto sm:top-10 bottom-20 sm:bottom-auto z-50 w-auto sm:w-64 md:w-72 bg-zinc-900 border border-white/10 rounded-xl sm:rounded-2xl shadow-2xl p-3 sm:p-4"
                         >
-                            {/* Trade Options View */}
+
                             {showTradeOptions ? (
                                 <>
-                                    {/* Header */}
+
                                     <div className="flex items-center gap-2 mb-4">
                                         <button
                                             onClick={() => setShowTradeOptions(false)}
@@ -125,7 +125,7 @@ export default function SwapSettings({
                                         <span className="text-sm font-semibold text-zinc-100">Trade options</span>
                                     </div>
 
-                                    {/* Default Option */}
+
                                     <div className="mb-3">
                                         <div className="flex items-center justify-between mb-2">
                                             <div className="flex items-center gap-1 relative">
@@ -165,7 +165,7 @@ export default function SwapSettings({
                                         </p>
                                     </div>
 
-                                    {/* V2/V3/V4 Pool Options */}
+
                                     <AnimatePresence>
                                         {!useUniswapDefault && (
                                             <motion.div
@@ -230,7 +230,7 @@ export default function SwapSettings({
                                 </>
                             ) : (
                                 <>
-                                    {/* Main Settings View */}
+
                                     <div className="mb-3 sm:mb-4">
                                         <div className="flex items-center gap-1 mb-1.5 sm:mb-2 relative">
                                             <span className="text-xs sm:text-sm font-medium text-zinc-300">Max slippage</span>
@@ -244,7 +244,7 @@ export default function SwapSettings({
                                                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                                                 </svg>
                                             </button>
-                                            {/* Slippage Tooltip */}
+
                                             <AnimatePresence>
                                                 {showSlippageInfo && (
                                                     <motion.div
@@ -283,7 +283,7 @@ export default function SwapSettings({
                                         </div>
                                     </div>
 
-                                    {/* Swap Deadline */}
+
                                     <div className="mb-3 sm:mb-4">
                                         <div className="flex items-center gap-1 mb-1.5 sm:mb-2 relative">
                                             <span className="text-xs sm:text-sm font-medium text-zinc-300">Swap deadline</span>
@@ -297,7 +297,7 @@ export default function SwapSettings({
                                                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                                                 </svg>
                                             </button>
-                                            {/* Deadline Tooltip */}
+
                                             <AnimatePresence>
                                                 {showDeadlineInfo && (
                                                     <motion.div
@@ -328,7 +328,7 @@ export default function SwapSettings({
                                         </div>
                                     </div>
 
-                                    {/* Trade Options */}
+
                                     <div>
                                         <button
                                             onClick={() => setShowTradeOptions(true)}

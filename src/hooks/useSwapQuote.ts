@@ -19,9 +19,6 @@ interface UseSwapQuoteResult {
     refetch: () => void;
 }
 
-/**
- * Hook for fetching swap quotes from Uniswap
- */
 export function useSwapQuote({
     tokenIn,
     tokenOut,
@@ -40,7 +37,7 @@ export function useSwapQuote({
             return;
         }
 
-        // Parse amount to bigint
+
         let parsedAmount: bigint;
         try {
             const amountFloat = parseFloat(amountIn);
@@ -83,7 +80,7 @@ export function useSwapQuote({
         }
     }, [tokenIn, tokenOut, amountIn, rpcUrl, poolPreferences]);
 
-    // Debounced quote fetching
+
     useEffect(() => {
         const timer = setTimeout(() => {
             fetchQuote();
@@ -100,9 +97,6 @@ export function useSwapQuote({
     };
 }
 
-/**
- * Format a bigint amount to a human-readable string
- */
 export function formatAmount(amount: bigint, decimals: number, maxDecimals = 6): string {
     const divisor = BigInt(10) ** BigInt(decimals);
     const wholePart = amount / divisor;
@@ -122,9 +116,6 @@ export function formatAmount(amount: bigint, decimals: number, maxDecimals = 6):
     return `${wholePart}.${trimmed}`;
 }
 
-/**
- * Parse a human-readable amount to bigint
- */
 export function parseAmount(amount: string, decimals: number): bigint {
     const [whole, fraction = ''] = amount.split('.');
     const paddedFraction = fraction.padEnd(decimals, '0').slice(0, decimals);

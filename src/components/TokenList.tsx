@@ -3,7 +3,7 @@
 import { useMemo, memo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import type { TokenBalance } from '@/lib/types';
-import Image from 'next/image';
+import TokenIcon from './ui/TokenIcon';
 import AdCarousel from './AdCarousel';
 import { Pressable, StaggerContainer, StaggerItem, FadeIn } from './ui/Motion';
 import { useI18n } from '@/lib/i18n';
@@ -23,14 +23,12 @@ const TokenItem = memo(function TokenItem({
                 className="w-full flex items-center justify-between px-4 py-3 text-left"
             >
                 <div className="flex items-center gap-3">
-                    <div className="relative w-9 h-9 rounded-full overflow-hidden bg-zinc-800">
-                        <Image
-                            src={item.token.logoURI}
-                            alt={item.token.name}
-                            fill
-                            className="object-cover"
-                        />
-                    </div>
+                    <TokenIcon
+                        symbol={item.token.symbol}
+                        name={item.token.name}
+                        logoURI={item.token.logoURI}
+                        size={36}
+                    />
                     <div>
                         <p className="font-medium text-white text-sm">{item.token.symbol}</p>
                         <p className="text-xs text-zinc-500">{item.token.name}</p>

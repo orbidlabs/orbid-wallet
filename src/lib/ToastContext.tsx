@@ -38,7 +38,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
         setToasts(prev => [...prev, newToast]);
 
-        // Auto dismiss
+
         const duration = toast.duration || 5000;
         setTimeout(() => {
             setToasts(prev => prev.filter(t => t.id !== id));
@@ -57,7 +57,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     );
 }
 
-// Toast Container Component
+
 function ToastContainer({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id: string) => void }) {
     if (toasts.length === 0) return null;
 
@@ -73,7 +73,7 @@ function ToastContainer({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id
                         }`}
                 >
                     <div className="flex items-start gap-3">
-                        {/* Icon */}
+
                         <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${toast.type === 'success' ? 'bg-emerald-500/10' :
                             toast.type === 'error' ? 'bg-red-500/10' :
                                 toast.type === 'warning' ? 'bg-yellow-500/10' :
@@ -101,7 +101,7 @@ function ToastContainer({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id
                             )}
                         </div>
 
-                        {/* Content */}
+
                         <div className="flex-1 min-w-0">
                             <p className="font-medium text-white text-sm">{toast.title}</p>
                             {toast.message && (
@@ -122,7 +122,7 @@ function ToastContainer({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id
                             )}
                         </div>
 
-                        {/* Close button */}
+
                         <button
                             onClick={() => onDismiss(toast.id)}
                             className="flex-shrink-0 p-1 hover:bg-white/10 rounded transition-colors"

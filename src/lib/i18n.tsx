@@ -156,6 +156,7 @@ export interface Translations {
         minimumReceived: string;
         priceImpact: string;
         route: string;
+        poolSafety: string;
     };
     // Ads
     ads: {
@@ -310,6 +311,7 @@ export interface Translations {
         volume24h: string;
         high24h: string;
         fdv: string;
+        tvl: string;
         noChartData: string;
         noMarketData: string;
         now: string;

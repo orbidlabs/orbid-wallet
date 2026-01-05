@@ -203,6 +203,48 @@ export const WORLD_CHAIN_TOKENS: Token[] = [
         decimals: 18,
         logoURI: 'https://cdn.dexscreener.com/cms/images/6b364af0717941d3bbab268fd40e6eb424671813008662b76c16921e25bc1d27',
     },
+    {
+        symbol: 'VAMPR',
+        name: 'Vampr',
+        address: '0x314aEb84F8230204E02c7410c0fb76734d6BD882',
+        decimals: 18,
+    },
+    {
+        symbol: 'WDD',
+        name: 'Drachma',
+        address: '0xEdE54d9c024ee80C85ec0a75eD2d8774c7Fbac9B',
+        decimals: 18,
+    },
+    {
+        symbol: 'ANIX',
+        name: 'AniX',
+        address: '0xcd7Abb83918984A0Bb10a02f8656923041777369',
+        decimals: 18,
+    },
+    {
+        symbol: 'HTAP',
+        name: 'HumanTap',
+        address: '0xab4EAAC9D4DF861C82A0637db86dE45dd562379a',
+        decimals: 18,
+    },
+    {
+        symbol: 'MUNDO',
+        name: 'Mundo',
+        address: '0x6f9012048B71dD4b7E1646d7034aF9DEa4386F33',
+        decimals: 18,
+    },
+    {
+        symbol: 'oXAUt',
+        name: 'Tether Gold',
+        address: '0x30974f73A4ac9E606Ed80da928e454977ac486D2',
+        decimals: 6,
+    },
+    {
+        symbol: 'XVGWORLD',
+        name: 'XVGWORLD',
+        address: '0xe061Aa40Be525A13296CB4Bf69f513242349D708',
+        decimals: 18,
+    },
     // TODO: Uncomment when added to developer portal
     //{
     //    symbol: 'OID',

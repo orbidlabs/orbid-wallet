@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Image from 'next/image';
+import TokenIcon from '../ui/TokenIcon';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WORLD_CHAIN_TOKENS } from '@/lib/tokens';
 import { useI18n } from '@/lib/i18n';
@@ -37,7 +38,7 @@ export default function TokenSelector({ selectedToken, onSelect, excludeToken, b
             );
         });
 
-        // Sort by volume descending
+
         return [...base].sort((a, b) => {
             const volA = volumes[a.address.toLowerCase()] || 0;
             const volB = volumes[b.address.toLowerCase()] || 0;
@@ -57,17 +58,13 @@ export default function TokenSelector({ selectedToken, onSelect, excludeToken, b
             >
                 {selectedToken ? (
                     <>
-                        <div className="w-6 h-6 rounded-full overflow-hidden bg-zinc-900 border border-white/10">
-                            {selectedToken.logoURI && (
-                                <Image
-                                    src={selectedToken.logoURI}
-                                    alt={selectedToken.symbol}
-                                    width={24}
-                                    height={24}
-                                    className="w-full h-full object-cover"
-                                />
-                            )}
-                        </div>
+                        <TokenIcon
+                            symbol={selectedToken.symbol}
+                            name={selectedToken.name}
+                            logoURI={selectedToken.logoURI}
+                            size={24}
+                            className="border border-white/10"
+                        />
                         <span className="text-white font-bold text-sm tracking-tight">{selectedToken.symbol}</span>
                     </>
                 ) : (
@@ -86,7 +83,7 @@ export default function TokenSelector({ selectedToken, onSelect, excludeToken, b
             <AnimatePresence>
                 {isOpen && (
                     <>
-                        {/* Backdrop */}
+
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -95,19 +92,19 @@ export default function TokenSelector({ selectedToken, onSelect, excludeToken, b
                             className="fixed inset-0 bg-black/60 z-[100] backdrop-blur-sm"
                         />
 
-                        {/* Modal */}
+
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
                             className="fixed inset-x-2 bottom-4 top-20 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-md md:max-h-[85vh] bg-zinc-950 border border-white/10 rounded-[32px] z-[101] flex flex-col overflow-hidden shadow-2xl"
                         >
-                            {/* Sticky Header Section */}
+
                             <div className="sticky top-0 bg-zinc-950 z-20 pt-3 pb-2 px-1">
-                                {/* Drag Indicator (Mobile) */}
+
                                 <div className="md:hidden w-12 h-1.5 bg-zinc-800 rounded-full mx-auto mb-3" />
 
-                                {/* Header */}
+
                                 <div className="px-4 pb-2 flex justify-between items-center">
                                     <h3 className="text-lg font-bold text-white px-2">Select a token</h3>
                                     <button
@@ -120,7 +117,7 @@ export default function TokenSelector({ selectedToken, onSelect, excludeToken, b
                                     </button>
                                 </div>
 
-                                {/* Search */}
+
                                 <div className="px-4 pb-2">
                                     <div className="relative group">
                                         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-pink-400 transition-colors">
@@ -140,9 +137,9 @@ export default function TokenSelector({ selectedToken, onSelect, excludeToken, b
                                 </div>
                             </div>
 
-                            {/* Scrollable Content */}
+
                             <div className="flex-1 overflow-y-auto px-1 pb-4">
-                                {/* Featured Grid */}
+
                                 {!searchQuery && (
                                     <div className="flex flex-wrap gap-2 px-3 mb-6">
                                         {featuredTokens.map((token) => (
@@ -154,16 +151,19 @@ export default function TokenSelector({ selectedToken, onSelect, excludeToken, b
                                                 }}
                                                 className="flex items-center gap-2 px-3 py-2 bg-zinc-900/50 hover:bg-white/5 border border-white/5 rounded-2xl transition-all"
                                             >
-                                                <div className="w-5 h-5 rounded-full overflow-hidden bg-zinc-800">
-                                                    {token.logoURI && <Image src={token.logoURI} alt={token.symbol} width={20} height={20} />}
-                                                </div>
+                                                <TokenIcon
+                                                    symbol={token.symbol}
+                                                    name={token.name}
+                                                    logoURI={token.logoURI}
+                                                    size={20}
+                                                />
                                                 <span className="text-white font-bold text-xs uppercase tracking-tight">{token.symbol}</span>
                                             </button>
                                         ))}
                                     </div>
                                 )}
 
-                                {/* Your Tokens */}
+
                                 {!searchQuery && userTokens.length > 0 && (
                                     <div className="mb-4">
                                         <div className="px-4 py-2 flex items-center gap-2">
@@ -187,7 +187,7 @@ export default function TokenSelector({ selectedToken, onSelect, excludeToken, b
                                     </div>
                                 )}
 
-                                {/* Token List */}
+
                                 <div className="">
                                     {!searchQuery && (
                                         <div className="px-4 py-2 flex items-center gap-2">
@@ -230,11 +230,13 @@ function TokenItem({ token, balance, valueUSD, volumeUSD, onClick }: { token: To
             className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/5 transition-colors group"
         >
             <div className="flex items-center gap-3">
-                <div className="relative">
-                    <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-900 border border-white/5">
-                        {token.logoURI && <Image src={token.logoURI} alt={token.name} width={40} height={40} className="w-full h-full object-cover" />}
-                    </div>
-                </div>
+                <TokenIcon
+                    symbol={token.symbol}
+                    name={token.name}
+                    logoURI={token.logoURI}
+                    size={40}
+                    className="border border-white/5"
+                />
                 <div className="flex flex-col items-start">
                     <span className="text-white font-bold tracking-tight">{token.name}</span>
                     <span className="text-zinc-500 text-xs font-medium">{token.symbol}</span>

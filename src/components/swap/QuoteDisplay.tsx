@@ -43,19 +43,19 @@ export default function QuoteDisplay({
         return null;
     }
 
-    // Format amounts
+
     const amountOut = formatBigInt(quote.amountOut, tokenOut.decimals);
     const amountOutMin = formatBigInt(quote.amountOutMin, tokenOut.decimals);
     const feeAmount = formatBigInt(quote.fee, tokenIn.decimals);
 
-    // Calculate rate
+
     const amountInNum = Number(quote.amountIn) / (10 ** tokenIn.decimals);
     const amountOutNum = Number(quote.amountOut) / (10 ** tokenOut.decimals);
     const rate = amountOutNum / amountInNum;
 
     return (
         <div className="flex flex-col gap-2 py-1">
-            {/* Rate Line */}
+
             <div className="flex justify-between items-center px-1">
                 <span className="text-[11px] font-medium text-zinc-500 uppercase tracking-widest">{t.swap.rate}</span>
                 <span className="text-xs font-semibold text-zinc-300">
@@ -63,7 +63,7 @@ export default function QuoteDisplay({
                 </span>
             </div>
 
-            {/* Extra Details Row */}
+
             <div className="flex flex-wrap items-center justify-between gap-y-2 mt-1 opacity-60">
                 <div className="flex items-center gap-1.5 bg-white/5 px-2 py-1 rounded-lg border border-white/5">
                     <span className="text-[10px] text-zinc-400 font-bold uppercase">{t.swap.minimumReceived}:</span>

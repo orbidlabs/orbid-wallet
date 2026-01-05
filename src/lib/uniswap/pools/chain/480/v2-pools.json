@@ -1,0 +1,22 @@
+{
+    "version": "1.0.0",
+    "protocol": "uniswap-v2",
+    "network": "worldchain",
+    "chainId": 480,
+    "pools": [
+        {
+            "symbol": "WETH/USDC.e",
+            "token0": "0x4200000000000000000000000000000000000006",
+            "token0Symbol": "WETH",
+            "token1": "0x79A02482A880bCE3F13e09Da970dC34db4CD24d1",
+            "token1Symbol": "USDC.e",
+            "pairAddress": "0x...",
+            "uniswapUrl": "https://app.uniswap.org/explore/pools/worldchain/...",
+            "notes": "Main WETH/USDC pair"
+        }
+    ],
+    "meta": {
+        "lastUpdated": "2026-01-04",
+        "notes": "V2 pools use automated market maker with constant product formula (x*y=k). No concentrated liquidity."
+    }
+}

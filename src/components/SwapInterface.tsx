@@ -9,15 +9,15 @@ import { useWalletBalances } from '@/hooks/useWalletBalances';
 import { useSwapQuote } from '@/hooks/useSwapQuote';
 import { useSwap } from '@/hooks/useSwap';
 import { useToast } from '@/lib/ToastContext';
-import { ORBID_SWAP_RELAY_ADDRESS, SWAP_CONFIG } from '@/lib/uniswap/config';
+import { SWAP_CONFIG } from '@/lib/uniswap/config';
 import TokenSelector from './swap/TokenSelector';
 import AmountInput from './swap/AmountInput';
 import QuoteDisplay from './swap/QuoteDisplay';
 import SwapSettings from './swap/SwapSettings';
+import SwapConfirmModal from './swap/SwapConfirmModal';
 import type { Token } from '@/lib/types';
 import type { Token as SwapToken } from '@/lib/uniswap/types';
 
-// RPC URL for World Chain
 const WORLD_CHAIN_RPC = process.env.NEXT_PUBLIC_ALCHEMY_RPC_URL || 'https://worldchain.drpc.org';
 
 export default function SwapInterface() {
@@ -26,7 +26,6 @@ export default function SwapInterface() {
     const { walletAddress } = useAuth();
     const { balances } = useWalletBalances(walletAddress || '');
 
-    // Swap state
     const [tokenIn, setTokenIn] = useState<Token | null>(null);
     const [tokenOut, setTokenOut] = useState<Token | null>(null);
     const [amountIn, setAmountIn] = useState('');
@@ -55,27 +54,28 @@ export default function SwapInterface() {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // Convert Token to SwapToken
-    const swapTokenIn: SwapToken | null = tokenIn ? {
+    const swapTokenIn: SwapToken | null = useMemo(() => tokenIn ? {
         address: tokenIn.address,
         symbol: tokenIn.symbol,
         name: tokenIn.name,
         decimals: tokenIn.decimals,
         logoURI: tokenIn.logoURI,
-    } : null;
+        buyTax: tokenIn.buyTax,
+        sellTax: tokenIn.sellTax,
+    } : null, [tokenIn?.address, tokenIn?.symbol, tokenIn?.name, tokenIn?.decimals, tokenIn?.logoURI, tokenIn?.buyTax, tokenIn?.sellTax]);
 
-    const swapTokenOut: SwapToken | null = tokenOut ? {
+    const swapTokenOut: SwapToken | null = useMemo(() => tokenOut ? {
         address: tokenOut.address,
         symbol: tokenOut.symbol,
         name: tokenOut.name,
         decimals: tokenOut.decimals,
         logoURI: tokenOut.logoURI,
-    } : null;
+        buyTax: tokenOut.buyTax,
+        sellTax: tokenOut.sellTax,
+    } : null, [tokenOut?.address, tokenOut?.symbol, tokenOut?.name, tokenOut?.decimals, tokenOut?.logoURI, tokenOut?.buyTax, tokenOut?.sellTax]);
 
-    // Memoize pool preferences to prevent infinite re-renders
     const poolPreferences = useMemo(() => ({ useV2, useV3, useV4 }), [useV2, useV3, useV4]);
 
-    // Get quote
     const { quote, isLoading: isQuoteLoading, error: quoteError } = useSwapQuote({
         tokenIn: swapTokenIn,
         tokenOut: swapTokenOut,
@@ -84,7 +84,6 @@ export default function SwapInterface() {
         poolPreferences,
     });
 
-    // Get balance and prices for selected tokens
     const tokenInData = tokenIn && balances ? balances.find(b => b.token.symbol === tokenIn.symbol) : undefined;
     const tokenOutData = tokenOut && balances ? balances.find(b => b.token.symbol === tokenOut.symbol) : undefined;
 
@@ -94,11 +93,9 @@ export default function SwapInterface() {
 
     const amountOut = quote ? formatBigInt(quote.amountOut, tokenOut?.decimals || 18) : '';
     const tokenOutPrice = tokenOutData?.valueUSD ? tokenOutData.valueUSD / parseFloat(tokenOutData.balance || '1') : 0;
-    // For output, if we don't have price for tokenOut yet, we can estimate from quote if tokenIn has price
     const estimatedTokenOutPrice = tokenIn && tokenOut && quote ? (parseFloat(amountIn) * tokenInPrice) / parseFloat(amountOut) : tokenOutPrice;
     const fiatValueOut = tokenOut && amountOut ? `$${(parseFloat(amountOut) * (tokenOutPrice || estimatedTokenOutPrice)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '$0.00';
 
-    // Swap tokens
     const handleSwapTokens = () => {
         const temp = tokenIn;
         setTokenIn(tokenOut);
@@ -114,23 +111,19 @@ export default function SwapInterface() {
         }
     };
 
-    // Check if swap is ready
-    const isContractDeployed = !!ORBID_SWAP_RELAY_ADDRESS && ORBID_SWAP_RELAY_ADDRESS !== '0x';
     const canSwap = tokenIn && tokenOut && amountIn && quote && !isQuoteLoading;
 
-    // Initialize swap hook
     const { state: swapState, executeSwap, reset: resetSwap } = useSwap({
         tokenIn: swapTokenIn,
         tokenOut: swapTokenOut,
         quote,
         walletAddress: walletAddress || '',
-        slippageBps: Math.round(slippage * 100),
     });
 
-    // State for error modal
     const [swapErrorDetail, setSwapErrorDetail] = useState<string | null>(null);
 
-    // Handle swap state changes
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+
     useEffect(() => {
         if (swapState.status === 'success') {
             showToast({
@@ -142,7 +135,6 @@ export default function SwapInterface() {
             setAmountIn('');
             resetSwap();
         } else if (swapState.status === 'error' && swapState.error) {
-            // Show detailed error in modal
             setSwapErrorDetail(swapState.error);
             showToast({
                 type: 'error',
@@ -154,19 +146,22 @@ export default function SwapInterface() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [swapState.status]);
 
-    // Execute swap
-    const handleSwap = async () => {
+    const handleSwapClick = () => {
         if (!canSwap) return;
+        setShowConfirmModal(true);
+    };
+
+    const handleConfirmSwap = async () => {
         setIsSwapping(true);
         setSwapErrorDetail(null);
         try {
             await executeSwap();
+            setShowConfirmModal(false);
         } finally {
             setIsSwapping(false);
         }
     };
 
-    // Copy error to clipboard
     const copyErrorToClipboard = () => {
         if (swapErrorDetail) {
             navigator.clipboard.writeText(swapErrorDetail);
@@ -175,15 +170,9 @@ export default function SwapInterface() {
     };
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col max-w-md mx-auto w-full px-2"
-        >
-            {/* Main Swap Container */}
-            <div className="relative flex flex-col gap-1 mt-4">
+        <div className="flex flex-col max-w-md mx-auto w-full px-2">
+            <div className="flex flex-col mt-4">
 
-                {/* Header with Settings */}
                 <div className="flex justify-end mb-2 px-1">
                     <SwapSettings
                         slippage={slippage}
@@ -197,16 +186,14 @@ export default function SwapInterface() {
                     />
                 </div>
 
-                {/* Sell Card */}
                 <div
                     onMouseEnter={() => setIsInputHovered(true)}
                     onMouseLeave={() => setIsInputHovered(false)}
-                    className="bg-zinc-900/40 border border-white/5 rounded-[24px] p-4 pt-5 pb-5 hover:bg-zinc-900/60 transition-colors group/card"
+                    className="bg-zinc-900/50 rounded-2xl p-3 hover:bg-zinc-900/70 transition-colors"
                 >
                     <div className="flex justify-between items-center mb-1 h-6">
                         <span className="text-sm font-semibold text-zinc-500">Sell</span>
 
-                        {/* Percentage Buttons - desktop hover / always on mobile */}
                         <AnimatePresence>
                             {(isInputHovered || isMobile) && tokenIn && (
                                 <motion.div
@@ -215,6 +202,7 @@ export default function SwapInterface() {
                                     exit={{ opacity: 0, x: 10 }}
                                     className="flex items-center gap-1"
                                 >
+
                                     {[25, 50, 75].map((p) => (
                                         <button
                                             key={p}
@@ -235,7 +223,7 @@ export default function SwapInterface() {
                         </AnimatePresence>
                     </div>
 
-                    <div className="flex items-center gap-4 py-2">
+                    <div className="flex items-center gap-3 py-1">
                         <AmountInput
                             value={amountIn}
                             onChange={setAmountIn}
@@ -259,27 +247,23 @@ export default function SwapInterface() {
                     </div>
                 </div>
 
-                {/* Floating Swap Button */}
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-                    <motion.button
-                        whileHover={{ scale: 1.1, rotate: 180 }}
-                        whileTap={{ scale: 0.9 }}
+                <div className="flex justify-center -my-4 relative z-20">
+                    <button
                         onClick={handleSwapTokens}
-                        className="p-2.5 bg-zinc-950 border-4 border-black rounded-2xl shadow-xl hover:text-pink-400 transition-colors group"
+                        className="p-2 bg-zinc-950 border-4 border-black rounded-xl hover:bg-zinc-900 active:scale-95 transition-all"
                     >
-                        <svg className="w-5 h-5 text-zinc-400 group-hover:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                        <svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                         </svg>
-                    </motion.button>
+                    </button>
                 </div>
 
-                {/* Buy Card */}
-                <div className="bg-zinc-900/40 border border-white/5 rounded-[24px] p-4 pt-5 pb-5 hover:bg-zinc-900/60 transition-colors">
+                <div className="bg-zinc-900/50 rounded-2xl p-3 hover:bg-zinc-900/70 transition-colors">
                     <div className="flex justify-between items-center mb-1 h-6">
                         <span className="text-sm font-semibold text-zinc-500">Buy</span>
                     </div>
 
-                    <div className="flex items-center gap-4 py-2">
+                    <div className="flex items-center gap-3 py-1">
                         <AmountInput
                             value={amountOut}
                             onChange={() => { }}
@@ -305,7 +289,6 @@ export default function SwapInterface() {
                 </div>
             </div>
 
-            {/* Quote & Info Section */}
             <div className="mt-3 px-2">
                 <QuoteDisplay
                     quote={quote}
@@ -316,12 +299,11 @@ export default function SwapInterface() {
                 />
             </div>
 
-            {/* Main Action Button */}
             <div className="mt-6 px-1">
                 <motion.button
                     whileHover={{ scale: canSwap ? 1.01 : 1 }}
                     whileTap={{ scale: canSwap ? 0.99 : 1 }}
-                    onClick={handleSwap}
+                    onClick={handleSwapClick}
                     disabled={!canSwap || isSwapping}
                     className={`
                         w-full py-5 rounded-2xl font-bold text-lg shadow-xl transition-all duration-300
@@ -348,12 +330,34 @@ export default function SwapInterface() {
                         t.swap.fetchingQuote
                     ) : quoteError ? (
                         t.swap.noLiquidity
-                    ) : !isContractDeployed ? (
-                        'Ready (Deploy Contract)'
                     ) : (
                         t.swap.swapButton
                     )}
                 </motion.button>
+            </div>
+
+            <div className="mt-8 flex flex-col items-center">
+                <div className="group relative flex items-center gap-1.5 cursor-help">
+                    <svg className="w-3.5 h-3.5 text-zinc-500 group-hover:text-amber-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="text-[10px] text-zinc-500 font-medium tracking-wide flex items-center gap-1 italic">
+                        Manual validation active
+                    </span>
+
+                    <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-64 p-4 bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none backdrop-blur-xl">
+                        <div className="flex items-center gap-2 mb-2 text-amber-500">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <span className="text-[10px] font-bold uppercase tracking-wider">Security Notice</span>
+                        </div>
+                        <div className="text-[10px] text-zinc-400 leading-relaxed font-medium">
+                            {t.swap.poolSafety}
+                        </div>
+                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-zinc-900 border-r border-b border-white/10 rotate-45"></div>
+                    </div>
+                </div>
             </div>
 
             <div className="mt-6 flex justify-center items-center gap-2">
@@ -369,7 +373,6 @@ export default function SwapInterface() {
                 </div>
             </div>
 
-            {/* Error Debug Modal */}
             <AnimatePresence>
                 {swapErrorDetail && (
                     <>
@@ -414,7 +417,26 @@ export default function SwapInterface() {
                     </>
                 )}
             </AnimatePresence>
-        </motion.div>
+
+            {
+                tokenIn && tokenOut && quote && (
+                    <SwapConfirmModal
+                        isOpen={showConfirmModal}
+                        onClose={() => setShowConfirmModal(false)}
+                        onConfirm={handleConfirmSwap}
+                        tokenIn={tokenIn}
+                        tokenOut={tokenOut}
+                        amountIn={amountIn}
+                        amountOut={amountOut}
+                        fiatValueIn={fiatValueIn}
+                        fiatValueOut={fiatValueOut}
+                        quote={quote}
+                        slippage={slippage}
+                        isSwapping={isSwapping}
+                    />
+                )
+            }
+        </div >
     );
 }
 
@@ -432,3 +454,4 @@ function formatBigInt(value: bigint, decimals: number): string {
 
     return trimmed ? `${whole}.${trimmed}` : whole.toString();
 }
+

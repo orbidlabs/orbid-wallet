@@ -46,7 +46,7 @@ export function getDeadline(minutes: number = SWAP_CONFIG.DEFAULT_DEADLINE_MINUT
 export function buildPermitData(
     tokenAddress: string,
     amount: bigint,
-    spender: string, // OrbIdSwapRelay address
+    spender: string, // Uniswap router address
     nonce: bigint,
     deadline: bigint
 ) {

@@ -12,7 +12,7 @@ interface AuthState {
     username: string | null;
     email: string | null;
     isInWorldApp: boolean;
-    isVerifiedHuman: boolean; // Verified with Orb - persists in Supabase
+    isVerifiedHuman: boolean;
     newsletterClosed: boolean;
 }
 
@@ -42,13 +42,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     const { isReady: miniKitReady, isInstalled: isInWorldApp } = useMiniKit();
 
-    // Initialize - Just mark as ready, user must authenticate fresh
+
     const initAuth = useCallback(() => {
         const cached = localStorage.getItem(WALLET_CACHE_KEY);
         const cachedWallet = cached ? JSON.parse(cached) : null;
 
         if (!cachedWallet?.walletAddress) {
-            // No session - user needs to connect
+
             setState({
                 isReady: true,
                 isAuthenticated: false,
@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             return;
         }
 
-        // Has cached session - restore it
+
         setState({
             isReady: true,
             isAuthenticated: true,
@@ -81,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, [miniKitReady, initAuth]);
 
-    // Login with World App - Always shows MiniKit dialog
+
     const loginWithWorldApp = useCallback(async () => {
         if (!isInWorldApp) {
             return;
@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
             const nonce = `${Date.now()}-${crypto.randomUUID()}`;
 
-            // This ALWAYS shows the MiniKit dialog
+
             const { finalPayload } = await MiniKit.commandsAsync.walletAuth({
                 nonce,
                 statement: 'Connect to OrbId Wallet',
@@ -100,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 const address = finalPayload.address;
                 const username = MiniKit.user?.username || null;
 
-                // Check Supabase ONLY for Orb verification status
+
                 let isVerifiedHuman = false;
                 try {
                     const res = await fetch(`/api/auth/orb-status?wallet=${address}`);
@@ -111,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     isVerifiedHuman = false;
                 }
 
-                // Save session to Supabase (creates/updates user record)
+
                 try {
                     const res = await fetch('/api/auth/session', {
                         method: 'POST',
@@ -126,7 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     console.error('Failed to save session:', error);
                 }
 
-                // Cache locally
+
                 const cacheData = {
                     walletAddress: address,
                     username,
@@ -152,7 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, [isInWorldApp]);
 
-    // Developer Bypass - For testing on Desktop/Preview
+
     const loginAsDev = useCallback(async () => {
         const address = '0x71C7656EC7ab88b098defB751B7401B5f6d8976F';
         const username = 'dev_user';
@@ -231,7 +231,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setState(prev => ({ ...prev, newsletterClosed: true }));
     }, []);
 
-    // Update Orb verification status - saves to Supabase
+
     const setVerifiedHuman = useCallback((verified: boolean) => {
         const cached = localStorage.getItem(WALLET_CACHE_KEY);
         if (cached) {
@@ -242,7 +242,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setState(prev => ({ ...prev, isVerifiedHuman: verified }));
     }, []);
 
-    // Logout - Complete reset
+
     const logout = useCallback(() => {
         // Clear auth-related storage only
         localStorage.removeItem(WALLET_CACHE_KEY);
@@ -250,7 +250,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem('notifications_enabled');
         sessionStorage.clear();
 
-        // Reset to initial state
+
         setState({
             isReady: true,
             isAuthenticated: false,

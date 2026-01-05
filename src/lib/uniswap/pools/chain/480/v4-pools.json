@@ -1,0 +1,180 @@
+{
+    "version": "1.0.0",
+    "protocol": "uniswap-v4",
+    "network": "worldchain",
+    "chainId": 480,
+    "pools": [
+        {
+            "symbol": "WARS/USDC.e",
+            "token0": "0x0dc4f92879b7670e5f4e4e6e3c801d229129d90d",
+            "token0Symbol": "WARS",
+            "token1": "0x79A02482A880bCE3F13e09Da970dC34db4CD24d1",
+            "token1Symbol": "USDC.e",
+            "fee": 3000,
+            "tickSpacing": 60,
+            "hooks": "0x0000000000000000000000000000000000000000",
+            "uniswapUrl": "https://app.uniswap.org/explore/pools/worldchain/0x...",
+            "notes": "WARS token pool"
+        },
+        {
+            "symbol": "WCOP/USDC.e",
+            "token0": "0x8a1d45e102e886510e891d2ec656a708991e2d76",
+            "token0Symbol": "WCOP",
+            "token1": "0x79A02482A880bCE3F13e09Da970dC34db4CD24d1",
+            "token1Symbol": "USDC.e",
+            "fee": 100,
+            "tickSpacing": 1,
+            "hooks": "0x0000000000000000000000000000000000000000",
+            "uniswapUrl": "https://app.uniswap.org/explore/pools/worldchain/0x...",
+            "notes": "WCOP official pool"
+        },
+        {
+            "symbol": "WPEN/USDC.e",
+            "token0": "0x79A02482A880bCE3F13e09Da970dC34db4CD24d1",
+            "token0Symbol": "USDC.e",
+            "token1": "0x4f34c8b3b5fb6d98da888f0fea543d4d9c9f2ebe",
+            "token1Symbol": "WPEN",
+            "fee": 3000,
+            "tickSpacing": 60,
+            "hooks": "0x0000000000000000000000000000000000000000",
+            "uniswapUrl": "https://app.uniswap.org/explore/pools/worldchain/0x99f91095af6e853d7c9d627d1991156815e26f62884aaf8d72fecf8d63afd5f7",
+            "notes": "WPEN token pool"
+        },
+        {
+            "symbol": "WLD/USDC.e",
+            "token0": "0x2cFc85d8E48F8EAB294be644d9E25C3030863003",
+            "token0Symbol": "WLD",
+            "token1": "0x79A02482A880bCE3F13e09Da970dC34db4CD24d1",
+            "token1Symbol": "USDC.e",
+            "fee": 1400,
+            "tickSpacing": 60,
+            "hooks": "0x0000000000000000000000000000000000000000",
+            "uniswapUrl": "https://app.uniswap.org/explore/pools/worldchain/0x132db01ffd6a7d844666666666666666666666666666666666666666666666666c",
+            "notes": "Confirmed V4 Pool"
+        },
+        {
+            "symbol": "WLD/USDC.e",
+            "token0": "0x2cFc85d8E48F8EAB294be644d9E25C3030863003",
+            "token0Symbol": "WLD",
+            "token1": "0x79A02482A880bCE3F13e09Da970dC34db4CD24d1",
+            "token1Symbol": "USDC.e",
+            "fee": 10000,
+            "tickSpacing": 200,
+            "hooks": "0x0000000000000000000000000000000000000000",
+            "uniswapUrl": "https://app.uniswap.org/explore/pools/worldchain/0x081028d60635d39241285edb01f6d6503b244eed2547333649daf2fe27c4a5b4",
+            "notes": "Confirmed V4 Pool"
+        },
+        {
+            "symbol": "WLD/ORB",
+            "token0": "0x2cFc85d8E48F8EAB294be644d9E25C3030863003",
+            "token0Symbol": "WLD",
+            "token1": "0xF3F92A60e6004f3982F0FdE0d43602fC0a30a0dB",
+            "token1Symbol": "ORB",
+            "fee": 10000,
+            "tickSpacing": 200,
+            "hooks": "0x0000000000000000000000000000000000000000",
+            "uniswapUrl": "https://app.uniswap.org/explore/pools/worldchain/0x01c4a12662895942be788160025e1359e232471f5e00228c1a1de14703975f4a",
+            "notes": "Confirmed V4 Pool"
+        },
+        {
+            "symbol": "WLD/ORB",
+            "token0": "0x2cFc85d8E48F8EAB294be644d9E25C3030863003",
+            "token0Symbol": "WLD",
+            "token1": "0xF3F92A60e6004f3982F0FdE0d43602fC0a30a0dB",
+            "token1Symbol": "ORB",
+            "fee": 4500,
+            "tickSpacing": 60,
+            "hooks": "0x0000000000000000000000000000000000000000",
+            "uniswapUrl": "https://app.uniswap.org/explore/pools/worldchain/0x093e534b7f9524bcc45e0ac95660a526dfd79af0e4a143c9d865cb4dbbdce15e",
+            "notes": "Confirmed V4 Pool"
+        },
+        {
+            "symbol": "WLD/USDC.e",
+            "token0": "0x2cFc85d8E48F8EAB294be644d9E25C3030863003",
+            "token0Symbol": "WLD",
+            "token1": "0x79A02482A880bCE3F13e09Da970dC34db4CD24d1",
+            "token1Symbol": "USDC.e",
+            "fee": 490,
+            "tickSpacing": 10,
+            "hooks": "0x0000000000000000000000000000000000000000",
+            "uniswapUrl": "https://app.uniswap.org/explore/pools/worldchain/0x578e16fb6526d2943391d6105eeca4ba8e5be7cf307b76c2a9b848f4e74bbcdd",
+            "notes": "Confirmed V4 Pool"
+        },
+        {
+            "symbol": "WLD/USDC.e",
+            "token0": "0x2cFc85d8E48F8EAB294be644d9E25C3030863003",
+            "token0Symbol": "WLD",
+            "token1": "0x79A02482A880bCE3F13e09Da970dC34db4CD24d1",
+            "token1Symbol": "USDC.e",
+            "fee": 440,
+            "tickSpacing": 10,
+            "hooks": "0x0000000000000000000000000000000000000000",
+            "uniswapUrl": "https://app.uniswap.org/explore/pools/worldchain/0xd627ed45fa1fa91907d39e855743f9b1d9f8670963c7a224c426bfd75f0e60ab",
+            "notes": "Confirmed V4 Pool"
+        },
+        {
+            "symbol": "WLD/SUSHI",
+            "token0": "0x2cFc85d8E48F8EAB294be644d9E25C3030863003",
+            "token0Symbol": "WLD",
+            "token1": "0xab09A728E53d3d6BC438BE95eeD46Da0Bbe7FB38",
+            "token1Symbol": "SUSHI",
+            "fee": 8000,
+            "tickSpacing": 60,
+            "hooks": "0x0000000000000000000000000000000000000000",
+            "uniswapUrl": "https://app.uniswap.org/explore/pools/worldchain/0xb129ad121cfd80dcc0c7fecb4604f6cc0b917b7937f85b205671d63dbe815684",
+            "notes": "Confirmed V4 Pool"
+        },
+        {
+            "symbol": "WLD/USDC.e",
+            "token0": "0x2cFc85d8E48F8EAB294be644d9E25C3030863003",
+            "token0Symbol": "WLD",
+            "token1": "0x79A02482A880bCE3F13e09Da970dC34db4CD24d1",
+            "token1Symbol": "USDC.e",
+            "fee": 8000,
+            "tickSpacing": 60,
+            "hooks": "0x0000000000000000000000000000000000000000",
+            "uniswapUrl": "https://app.uniswap.org/explore/pools/worldchain/0xb129ad121cfd80dcc0c7fecb4604f6cc0b917b7937f85b205671d63dbe815684",
+            "notes": "Verified V4 Pool"
+        },
+        {
+            "symbol": "WLD/ORB",
+            "token0": "0x2cFc85d8E48F8EAB294be644d9E25C3030863003",
+            "token0Symbol": "WLD",
+            "token1": "0xF3F92A60e6004f3982F0FdE0d43602fC0a30a0dB",
+            "token1Symbol": "ORB",
+            "fee": 31000,
+            "tickSpacing": 200,
+            "hooks": "0x0000000000000000000000000000000000000000",
+            "uniswapUrl": "https://app.uniswap.org/explore/pools/worldchain/0xcb77d4559f378d2b4cb3e5a0eff5c77a8f61d01c89cf3a8fd115ecfe8e8d02ba",
+            "notes": "Verified V4 Pool"
+        },
+        {
+            "symbol": "WLD/WETH",
+            "token0": "0x2cFc85d8E48F8EAB294be644d9E25C3030863003",
+            "token0Symbol": "WLD",
+            "token1": "0x4200000000000000000000000000000000000006",
+            "token1Symbol": "WETH",
+            "fee": 3000,
+            "tickSpacing": 60,
+            "hooks": "0x0000000000000000000000000000000000000000",
+            "uniswapUrl": "https://app.uniswap.org/explore/pools/worldchain/0x6ac7fd6fc12d46952086ebd92d5fe81d1efaa1fa49a724b51295220bd76140fc",
+            "notes": "Verified V4 Pool"
+        },
+        {
+            "symbol": "WLD/XVGWORLD",
+            "token0": "0x2cFc85d8E48F8EAB294be644d9E25C3030863003",
+            "token0Symbol": "WLD",
+            "token1": "0xe061Aa40Be525A13296CB4Bf69f513242349D708",
+            "token1Symbol": "XVGWORLD",
+            "fee": 10000,
+            "tickSpacing": 200,
+            "hooks": "0x0000000000000000000000000000000000000000",
+            "uniswapUrl": "https://app.uniswap.org/explore/pools/worldchain/0x2a67b0973fae9192652891af33e457d43bd7e37b38376a3e2c235ddb078788af",
+            "notes": "Verified V4 Pool"
+        }
+    ],
+    "meta": {
+        "lastUpdated": "2026-01-04",
+        "notes": "V4 pools support hooks and custom fees. Standard tick spacings: 1(0.01%), 10(0.05%), 60(0.3%), 200(1%)"
+    }
+}

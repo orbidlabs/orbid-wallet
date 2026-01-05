@@ -47,13 +47,13 @@ async function getTokenBalance(tokenAddress: string, walletAddress: string): Pro
 async function getTokenPrices(): Promise<Record<string, TokenPrice>> {
     const prices: Record<string, TokenPrice> = {}
 
-    // Inicializar stablecoins con precio $1
+
     STABLECOIN_SYMBOLS.forEach((symbol) => {
         prices[symbol] = { usd: 1, usd_24h_change: 0 }
     })
 
     try {
-        // Filtrar tokens que no son stablecoins para consultar DEX Screener
+
         const tokensToFetch = WORLD_CHAIN_TOKENS.filter((t) => !STABLECOIN_SYMBOLS.includes(t.symbol))
 
         if (tokensToFetch.length === 0) return prices
@@ -76,14 +76,14 @@ async function getTokenPrices(): Promise<Record<string, TokenPrice>> {
             return prices
         }
 
-        // Procesar cada token
+
         tokensToFetch.forEach((token) => {
             const tokenAddr = token.address.toLowerCase()
 
             const tokenPairs = pairs.filter((p: any) => p.baseToken?.address?.toLowerCase() === tokenAddr)
 
             if (tokenPairs.length > 0) {
-                // Ordenar por liquidez para obtener el mejor precio
+
                 const bestPair = tokenPairs.sort(
                     (a: any, b: any) => Number.parseFloat(b.liquidity?.usd || "0") - Number.parseFloat(a.liquidity?.usd || "0"),
                 )[0]

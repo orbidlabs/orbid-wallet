@@ -1,47 +1,26 @@
-// Uniswap Configuration for World Chain
-// Contract addresses verified from official deployments
-
 export const WORLD_CHAIN_ID = 480;
 
-// Uniswap Contract Addresses on World Chain
 export const UNISWAP_ADDRESSES = {
-    // Permit2 - Universal across all chains
-    PERMIT2: '0x000000000022D473030F116dDEE9F6B43aC78BA3',
-
-    // Uniswap v2
+    PERMIT2: '0xF0882554ee924278806d708396F1a7975b732522',
     SWAP_ROUTER_V2: '0x541aB7c31A119441eF3575F6973277DE0eF460bd',
-    FACTORY_V2: '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f',
-
-    // Uniswap v3
     SWAP_ROUTER_V3: '0x091AD9e2e6e5eD44c1c66dB50e49A601F9f36cF6',
-    FACTORY_V3: '0x7a5028BDa40e7B173C278C5342087826455ea25a',
     QUOTER_V2: '0x10158D43e6cc414deE1Bd1eB0EfC6a5cBCfF244c',
-
-    // Uniswap v4
+    POOL_MANAGER: '0xb1860d529182ac3bc1f51fa2abd56662b7d13f33',
+    QUOTER_V4: '0x55d235b3ff2daf7c3ede0defc9521f1d6fe6c5c0',
+    STATE_VIEW: '0x51d394718bc09297262e368c1a481217fdeb71eb',
     UNIVERSAL_ROUTER_V4: '0x8ac7bee993bb44dab564ea4bc9ea67bf9eb5e743',
 } as const;
 
-// OrbIdSwapRelay Configuration
 export const SWAP_CONFIG = {
-    // Fee settings
-    FEE_BPS: 50, // 0.5%
-    FEE_RECIPIENT: '0xc248F2b195B6D328879e76F210fdC7276A2ddE1E',
-
-    // Default swap settings
-    DEFAULT_SLIPPAGE_BPS: 50, // 0.5%
+    DEFAULT_SLIPPAGE_BPS: 50,
     DEFAULT_DEADLINE_MINUTES: 20,
-
-    // Pool fee tiers (in hundredths of a bip)
     FEE_TIERS: {
-        LOWEST: 100,   // 0.01%
-        LOW: 500,      // 0.05%
-        MEDIUM: 3000,  // 0.3%
-        HIGH: 10000,   // 1%
+        LOWEST: 100,
+        LOW: 500,
+        MEDIUM: 3000,
+        HIGH: 10000,
     },
 } as const;
 
-// Deployed OrbIdSwapRelay V2 contract with rescueTokens (single-transaction swap)
-export const ORBID_SWAP_RELAY_ADDRESS = '0xb738d270c6695a6cbB0757F4A79080426525b7bf' as `0x${string}`;
-
-// WETH address on World Chain
 export const WETH_ADDRESS = '0x4200000000000000000000000000000000000006';
+
