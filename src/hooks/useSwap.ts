@@ -2,57 +2,21 @@
 
 import { useState, useCallback } from 'react';
 import { MiniKit } from '@worldcoin/minikit-js';
+import { encodeAbiParameters, parseAbiParameters, type Hex } from 'viem';
 import { SWAP_CONFIG, UNISWAP_ADDRESSES } from '@/lib/uniswap/config';
 import type { Token, SwapQuote, SwapState } from '@/lib/uniswap/types';
 
-const SWAP_ROUTER_V3_ABI = [{
-    name: 'exactInputSingle',
+const UNIVERSAL_ROUTER_ABI = [{
+    name: 'execute',
     type: 'function',
-    inputs: [{
-        name: 'params',
-        type: 'tuple',
-        components: [
-            { name: 'tokenIn', type: 'address' },
-            { name: 'tokenOut', type: 'address' },
-            { name: 'fee', type: 'uint24' },
-            { name: 'recipient', type: 'address' },
-            { name: 'amountIn', type: 'uint256' },
-            { name: 'amountOutMinimum', type: 'uint256' },
-            { name: 'sqrtPriceLimitX96', type: 'uint160' }
-        ]
-    }],
-    outputs: [{ name: 'amountOut', type: 'uint256' }],
+    inputs: [
+        { name: 'commands', type: 'bytes' },
+        { name: 'inputs', type: 'bytes[]' },
+        { name: 'deadline', type: 'uint256' }
+    ],
+    outputs: [],
     stateMutability: 'payable'
 }] as const;
-
-const SWAP_ROUTER_V2_ABI = [
-    {
-        name: 'swapExactTokensForTokens',
-        type: 'function',
-        inputs: [
-            { name: 'amountIn', type: 'uint256' },
-            { name: 'amountOutMin', type: 'uint256' },
-            { name: 'path', type: 'address[]' },
-            { name: 'to', type: 'address' },
-            { name: 'deadline', type: 'uint256' }
-        ],
-        outputs: [{ name: 'amounts', type: 'uint256[]' }],
-        stateMutability: 'nonpayable'
-    },
-    {
-        name: 'swapExactTokensForTokensSupportingFeeOnTransferTokens',
-        type: 'function',
-        inputs: [
-            { name: 'amountIn', type: 'uint256' },
-            { name: 'amountOutMin', type: 'uint256' },
-            { name: 'path', type: 'address[]' },
-            { name: 'to', type: 'address' },
-            { name: 'deadline', type: 'uint256' }
-        ],
-        outputs: [],
-        stateMutability: 'nonpayable'
-    }
-] as const;
 
 interface UseSwapParams {
     tokenIn: Token | null;
@@ -67,12 +31,10 @@ interface UseSwapResult {
     reset: () => void;
 }
 
-function getVersionRouter(version: 'v2' | 'v3' | 'v4'): string {
-    switch (version) {
-        case 'v2': return UNISWAP_ADDRESSES.SWAP_ROUTER_V2;
-        case 'v3': return UNISWAP_ADDRESSES.SWAP_ROUTER_V3;
-        case 'v4': return UNISWAP_ADDRESSES.UNIVERSAL_ROUTER_V4;
-    }
+function encodePathV3(tokenIn: string, fee: number, tokenOut: string): Hex {
+    return (tokenIn.toLowerCase() +
+        fee.toString(16).padStart(6, '0') +
+        tokenOut.toLowerCase().slice(2)) as Hex;
 }
 
 export function useSwap({
@@ -104,7 +66,6 @@ export function useSwap({
         }
 
         let version: 'v2' | 'v3' | 'v4' | undefined;
-        let router: string | undefined;
         let amountIn: string | undefined;
 
         try {
@@ -112,76 +73,53 @@ export function useSwap({
 
             amountIn = quote.amountIn.toString();
             const amountOutMin = quote.amountOutMin.toString();
-            const deadline = Math.floor(Date.now() / 1000) + (SWAP_CONFIG.DEFAULT_DEADLINE_MINUTES * 60);
+            const deadline = BigInt(Math.floor(Date.now() / 1000) + (SWAP_CONFIG.DEFAULT_DEADLINE_MINUTES * 60));
             const poolFee = quote.route.pools[0]?.fee || SWAP_CONFIG.FEE_TIERS.MEDIUM;
             version = quote.route.version;
-            router = getVersionRouter(version);
+            const router = UNISWAP_ADDRESSES.UNIVERSAL_ROUTER;
             const tokenInLower = tokenIn.address.toLowerCase() as `0x${string}`;
             const nonce = Date.now().toString();
 
-            let result;
+            let command: Hex;
+            let encodedInput: Hex;
 
-            if (version === 'v2') {
-                const hasTax = (tokenIn.sellTax || 0) > 0 || (tokenOut.buyTax || 0) > 0;
-                const functionName = hasTax ? 'swapExactTokensForTokensSupportingFeeOnTransferTokens' : 'swapExactTokensForTokens';
-
-                result = await MiniKit.commandsAsync.sendTransaction({
-                    transaction: [{
-                        address: router as `0x${string}`,
-                        abi: SWAP_ROUTER_V2_ABI,
-                        functionName,
-                        args: [
-                            amountIn,
-                            amountOutMin,
-                            [tokenIn.address, tokenOut.address],
-                            walletAddress,
-                            deadline.toString()
-                        ]
-                    }],
-                    permit2: [{
-                        permitted: { token: tokenInLower, amount: amountIn },
-                        spender: router as `0x${string}`,
-                        nonce,
-                        deadline: deadline.toString(),
-                    }]
-                });
-            } else if (version === 'v3') {
-                console.log('Using Uniswap V3 Router:', router);
-                const v3Args = [
-                    tokenIn.address,
-                    tokenOut.address,
-                    poolFee,
-                    walletAddress,
-                    amountIn,
-                    amountOutMin,
-                    '0'
-                ];
-                console.log('V3 Params:', {
-                    router,
-                    poolFee,
-                    args: v3Args,
-                    permit2Token: tokenInLower,
-                    permit2Amount: amountIn,
-                    permit2Spender: router
-                });
-
-                result = await MiniKit.commandsAsync.sendTransaction({
-                    transaction: [{
-                        address: router as `0x${string}`,
-                        abi: SWAP_ROUTER_V3_ABI,
-                        functionName: 'exactInputSingle',
-                        args: [v3Args]
-                    }],
-                    permit2: [{
-                        permitted: { token: tokenInLower, amount: amountIn },
-                        spender: router as `0x${string}`,
-                        nonce,
-                        deadline: deadline.toString(),
-                    }]
-                });
+            if (version === 'v3') {
+                command = '0x00'; // V3_SWAP_EXACT_IN
+                const path = encodePathV3(tokenIn.address, poolFee, tokenOut.address);
+                encodedInput = encodeAbiParameters(
+                    parseAbiParameters('address, uint256, uint256, bytes, bool'),
+                    [walletAddress as `0x${string}`, BigInt(amountIn), BigInt(amountOutMin), path, true]
+                );
             } else {
-                throw new Error(`Execution for Uniswap ${version} is not yet implemented. Please use a V2 or V3 pool.`);
+                command = '0x08'; // V2_SWAP_EXACT_IN
+                encodedInput = encodeAbiParameters(
+                    parseAbiParameters('address, uint256, uint256, address[], bool'),
+                    [walletAddress as `0x${string}`, BigInt(amountIn), BigInt(amountOutMin), [tokenIn.address as Hex, tokenOut.address as Hex], true]
+                );
             }
+
+            console.log('Executing Universal Router Swap:', {
+                version,
+                router,
+                method: 'execute',
+                command,
+                encodedInput
+            });
+
+            const result = await MiniKit.commandsAsync.sendTransaction({
+                transaction: [{
+                    address: router as `0x${string}`,
+                    abi: UNIVERSAL_ROUTER_ABI,
+                    functionName: 'execute',
+                    args: [command, [encodedInput], deadline]
+                }],
+                permit2: [{
+                    permitted: { token: tokenInLower, amount: amountIn },
+                    spender: router as `0x${string}`,
+                    nonce,
+                    deadline: deadline.toString(),
+                }]
+            });
 
             if (!result) {
                 throw new Error('Transaction request failed');
@@ -204,11 +142,11 @@ export function useSwap({
             const errorMessage = error instanceof Error ? error.message : String(error);
             const context = JSON.stringify({
                 version,
-                router,
+                router: UNISWAP_ADDRESSES.UNIVERSAL_ROUTER,
                 tokenIn: tokenIn.address,
                 tokenOut: tokenOut.address,
                 amountIn,
-                method: version === 'v3' ? 'exactInputSingle' : 'swapExactTokensForTokens',
+                method: 'execute',
                 isMiniKitInstalled: MiniKit.isInstalled()
             }, null, 2);
 
