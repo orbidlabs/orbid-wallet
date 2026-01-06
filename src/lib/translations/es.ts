@@ -41,6 +41,7 @@ export const es: Translations = {
         network: 'Red',
         viewExplorer: 'Ver en WorldScan',
         transactions: 'Transacciones',
+        error: 'Error al cargar actividad',
     },
     tokens: {
         title: 'Tokens',
@@ -320,5 +321,18 @@ export const es: Translations = {
     },
     receive: {
         worldChainWarning: 'Solo envía tokens compatibles con World Chain a esta dirección.',
+    },
+    grants: {
+        title: 'Subvenciones Worldcoin',
+        checking: 'Verificando elegibilidad...',
+        unableToLoad: 'No se pudo cargar',
+        fetchError: 'No se pudo obtener información del bono. Por favor intenta de nuevo.',
+        available: '¡Bono Disponible!',
+        next: 'Próximo Bono',
+        readyToClaim: 'Tienes un bono de Worldcoin listo para reclamar.',
+        availableOn: 'Tu próximo bono estará disponible el',
+        openApp: 'Abrir World App para Reclamar',
+        starts: 'Empieza',
+        ends: 'Termina',
     },
 };

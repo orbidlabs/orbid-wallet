@@ -48,6 +48,20 @@ export default function ProfileCard({
         setTimeout(() => setCopied(false), 2000);
     };
 
+    if (!address) {
+        return (
+            <div className="glass rounded-2xl p-4 animate-pulse">
+                <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-full bg-zinc-800" />
+                    <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-zinc-800 rounded w-1/3" />
+                        <div className="h-8 bg-zinc-800 rounded w-1/2" />
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <FadeIn>
             <motion.div

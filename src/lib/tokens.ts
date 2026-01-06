@@ -214,18 +214,21 @@ export const WORLD_CHAIN_TOKENS: Token[] = [
         name: 'Drachma',
         address: '0xEdE54d9c024ee80C85ec0a75eD2d8774c7Fbac9B',
         decimals: 18,
+        logoURI: 'https://assets.geckoterminal.com/0gp3m01cu8d61jd4n9nmhkvn5auh',
     },
     {
         symbol: 'ANIX',
         name: 'AniX',
         address: '0xcd7Abb83918984A0Bb10a02f8656923041777369',
         decimals: 18,
+        logoURI: 'https://dd.dexscreener.com/ds-data/tokens/worldchain/0xcd7abb83918984a0bb10a02f8656923041777369.png',
     },
     {
         symbol: 'HTAP',
         name: 'HumanTap',
         address: '0xab4EAAC9D4DF861C82A0637db86dE45dd562379a',
         decimals: 18,
+        logoURI: 'https://world-id-assets.com/app_40cf4a75c0ac4d247999bccb1ce8f857/d07ee4f8-381c-499b-83ee-e30e32ed9385.png',
     },
     {
         symbol: 'MUNDO',
@@ -238,6 +241,7 @@ export const WORLD_CHAIN_TOKENS: Token[] = [
         name: 'Tether Gold',
         address: '0x30974f73A4ac9E606Ed80da928e454977ac486D2',
         decimals: 6,
+        logoURI: 'https://assets.geckoterminal.com/cvdg8yzzu7aertdm1v31f157uwys',
     },
     {
         symbol: 'XVGWORLD',

@@ -36,6 +36,7 @@ export default function TokenIcon({ symbol, name, logoURI, size = 36, className 
                 sizes={`${size}px`}
                 className="object-cover"
                 onError={() => setError(true)}
+                unoptimized
             />
         </div>
     );

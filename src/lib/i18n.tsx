@@ -3224,6 +3224,7 @@ export interface Translations {
         network: string;
         viewExplorer: string;
         transactions: string;
+        error: string;
     };
     // Tokens
     tokens: {
@@ -3523,6 +3524,20 @@ export interface Translations {
     // Receive Modal specific
     receive: {
         worldChainWarning: string;
+    };
+    // Worldcoin Grants
+    grants: {
+        title: string;
+        checking: string;
+        unableToLoad: string;
+        fetchError: string;
+        available: string;
+        next: string;
+        readyToClaim: string;
+        availableOn: string;
+        openApp: string;
+        starts: string;
+        ends: string;
     };
 }
 

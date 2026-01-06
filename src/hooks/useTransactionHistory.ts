@@ -86,53 +86,91 @@ export function useTransactionHistory(walletAddress?: string) {
         setError(null);
 
         try {
-            const sentParams: Record<string, unknown> = {
-                fromAddress: walletAddress,
+            // Prepare common params
+            const commonParams = {
                 category: ['erc20', 'external'],
                 order: 'desc',
-                maxCount: `0x${TRANSACTIONS_PER_PAGE.toString(16)}`
+                maxCount: `0x${TRANSACTIONS_PER_PAGE.toString(16)}`,
+                excludeZeroValue: true
+            };
+
+            const sentParams: Record<string, unknown> = {
+                ...commonParams,
+                fromAddress: walletAddress.toLowerCase(),
             };
             const receivedParams: Record<string, unknown> = {
-                toAddress: walletAddress,
-                category: ['erc20', 'external'],
-                order: 'desc',
-                maxCount: `0x${TRANSACTIONS_PER_PAGE.toString(16)}`
+                ...commonParams,
+                toAddress: walletAddress.toLowerCase(),
             };
 
-            if (isLoadMore && pageKeysRef.current.sent) {
-                sentParams.pageKey = pageKeysRef.current.sent;
-            }
-            if (isLoadMore && pageKeysRef.current.received) {
-                receivedParams.pageKey = pageKeysRef.current.received;
+            const promises: Promise<Response>[] = [];
+            const requestTypes: ('sent' | 'received')[] = [];
+
+            // Only fetch 'sent' if we have a pageKey OR it's the initial load
+            if (!isLoadMore || pageKeysRef.current.sent !== undefined) {
+                if (isLoadMore && pageKeysRef.current.sent) {
+                    sentParams.pageKey = pageKeysRef.current.sent;
+                }
+                // If isLoadMore is true but sent key is null (undefined check passed?), wait.
+                // The pageKey from Alchemy is 'undefined' if no more pages.
+                // So if pageKeysRef.current.sent is undefined, we shouldn't fetch.
+                // My check above: (!isLoadMore || pageKeysRef.current.sent !== undefined)
+                // If isLoadMore=true, we need pageKeysRef.current.sent !== undefined.
+                // This seems correct assuming we initialize ref to {} (undefined properties).
+                // Wait, initial load: ref is {}. sent is undefined. !isLoadMore is true. We fetch. Correct.
+                // Load more: send is undefined (exhausted). !isLoadMore is false. undefined!==undefined is false. We SKIP. Correct.
+
+                requestTypes.push('sent');
+                promises.push(
+                    fetch(ALCHEMY_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            jsonrpc: '2.0',
+                            id: 1,
+                            method: 'alchemy_getAssetTransfers',
+                            params: [sentParams]
+                        })
+                    })
+                );
             }
 
-            const [sentRes, receivedRes] = await Promise.all([
-                fetch(ALCHEMY_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        jsonrpc: '2.0',
-                        id: 1,
-                        method: 'alchemy_getAssetTransfers',
-                        params: [sentParams]
+            // Only fetch 'received' if we have a pageKey OR it's the initial load
+            if (!isLoadMore || pageKeysRef.current.received !== undefined) {
+                if (isLoadMore && pageKeysRef.current.received) {
+                    receivedParams.pageKey = pageKeysRef.current.received;
+                }
+                requestTypes.push('received');
+                promises.push(
+                    fetch(ALCHEMY_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            jsonrpc: '2.0',
+                            id: 2,
+                            method: 'alchemy_getAssetTransfers',
+                            params: [receivedParams]
+                        })
                     })
-                }),
-                fetch(ALCHEMY_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        jsonrpc: '2.0',
-                        id: 2,
-                        method: 'alchemy_getAssetTransfers',
-                        params: [receivedParams]
-                    })
-                })
-            ]);
+                );
+            }
 
-            const [sentData, receivedData]: [AlchemyResponse, AlchemyResponse] = await Promise.all([
-                sentRes.json(),
-                receivedRes.json()
-            ]);
+            if (promises.length === 0) {
+                setIsLoadingMore(false);
+                setHasMore(false);
+                return;
+            }
+
+            const responses = await Promise.all(promises);
+            const jsonData = await Promise.all(responses.map(r => r.json()));
+
+            let sentData: AlchemyResponse = {};
+            let receivedData: AlchemyResponse = {};
+
+            jsonData.forEach((data, index) => {
+                if (requestTypes[index] === 'sent') sentData = data;
+                else receivedData = data;
+            });
 
             const sentTransfers: AlchemyTransfer[] = sentData.result?.transfers || [];
             const receivedTransfers: AlchemyTransfer[] = receivedData.result?.transfers || [];
@@ -210,17 +248,27 @@ export function useTransactionHistory(walletAddress?: string) {
             const newTxs = [...sentTxs, ...receivedTxs].sort((a, b) => b.timestamp - a.timestamp);
 
             if (isLoadMore) {
+                // Filter out any transactions that we already have
                 const existingHashes = new Set(allTransactionsRef.current.map(t => t.hash));
                 const uniqueNewTxs = newTxs.filter(tx => !existingHashes.has(tx.hash));
-                allTransactionsRef.current = [...allTransactionsRef.current, ...uniqueNewTxs];
+
+                // If we fetched data but found no *new* transactions (e.g. overlap),
+                // we should still respect the sort order of the combined list.
+                const combined = [...allTransactionsRef.current, ...uniqueNewTxs];
+
+                // Always re-sort to ensure correct order after merging pagination results
+                combined.sort((a, b) => b.timestamp - a.timestamp);
+
+                allTransactionsRef.current = combined;
             } else {
+                // Initial load
+                // Deduplicate within the fetched batch just in case
                 allTransactionsRef.current = newTxs.filter((tx, index, self) =>
                     index === self.findIndex(t => t.hash === tx.hash)
                 );
             }
 
-            const sortedTxs = [...allTransactionsRef.current].sort((a, b) => b.timestamp - a.timestamp);
-            setTransactions(sortedTxs);
+            setTransactions([...allTransactionsRef.current]);
 
         } catch (err) {
             console.error('Failed to fetch transactions:', err);

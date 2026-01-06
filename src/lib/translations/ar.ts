@@ -41,6 +41,7 @@ export const ar: Translations = {
         network: 'الشبكة',
         viewExplorer: 'عرض على WorldScan',
         transactions: 'المعاملات',
+        error: 'فشل تحميل النشاط',
     },
     tokens: {
         title: 'الرموز',
@@ -320,5 +321,18 @@ export const ar: Translations = {
     },
     receive: {
         worldChainWarning: 'أرسل فقط الرموز المتوافقة مع World Chain إلى هذا العنوان.',
+    },
+    grants: {
+        title: 'منح Worldcoin',
+        checking: 'جاري التحقق من الأهلية...',
+        unableToLoad: 'تعذر التحميل',
+        fetchError: 'تعذر جلب معلومات المنحة. يرجى المحاولة مرة أخرى.',
+        available: 'المنحة متاحة!',
+        next: 'المنحة التالية',
+        readyToClaim: 'لديك منحة Worldcoin جاهزة للمطالبة.',
+        availableOn: 'ستتوفر منحتك التالية في',
+        openApp: 'افتح تطبيق World للمطالبة',
+        starts: 'يبدأ',
+        ends: 'ينتهي',
     },
 };

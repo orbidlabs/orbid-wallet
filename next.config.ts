@@ -29,6 +29,21 @@ const nextConfig: NextConfig = {
         hostname: 'magenta-wrong-impala-427.mypinata.cloud',
         pathname: '/ipfs/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'assets.geckoterminal.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'world-id-assets.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'dd.dexscreener.com',
+        pathname: '/ds-data/tokens/**',
+      },
     ],
   },
 };

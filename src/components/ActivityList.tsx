@@ -173,7 +173,7 @@ function LoadingSkeleton() {
 
 export default function ActivityList({ walletAddress }: ActivityListProps) {
     const { t } = useI18n();
-    const { transactions, isLoading, isLoadingMore, hasMore, loadMore, getRelativeTime } = useTransactionHistory(walletAddress);
+    const { transactions, isLoading, isLoadingMore, hasMore, loadMore, refetch, getRelativeTime, error } = useTransactionHistory(walletAddress);
     const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
 
     const getTypeLabel = (type: string) => {
@@ -184,6 +184,34 @@ export default function ActivityList({ walletAddress }: ActivityListProps) {
             default: return t.activity.contract;
         }
     };
+
+    // Error state
+    if (error) {
+        return (
+            <FadeIn>
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="glass rounded-2xl p-8 text-center"
+                >
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/10 flex items-center justify-center">
+                        <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h3 className="text-white font-semibold mb-2">{t.activity.error}</h3>
+                    <p className="text-zinc-500 text-sm mb-4">{error}</p>
+                    <AnimatedButton
+                        onClick={refetch}
+                        variant="glass"
+                        size="sm"
+                    >
+                        Retry
+                    </AnimatedButton>
+                </motion.div>
+            </FadeIn>
+        );
+    }
 
     // Empty state
     if (!isLoading && transactions.length === 0) {
@@ -224,75 +252,84 @@ export default function ActivityList({ walletAddress }: ActivityListProps) {
                 ) : (
                     <div className="divide-y divide-white/5">
                         {transactions.map((tx) => (
-                            <button
+                            <motion.div
                                 key={tx.hash}
-                                onClick={() => setSelectedTx(tx)}
-                                className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-white/5 active:bg-white/10 transition-colors"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3 }}
                             >
-                                <div className="flex items-center gap-3">
-                                    {/* Icon */}
-                                    <div className={`w-9 h-9 rounded-full flex items-center justify-center ${tx.type === 'receive'
-                                        ? 'bg-emerald-500/10'
-                                        : tx.type === 'send'
-                                            ? 'bg-pink-500/10'
-                                            : 'bg-blue-500/10'
-                                        }`}>
-                                        {tx.type === 'receive' ? (
-                                            <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                                            </svg>
-                                        ) : tx.type === 'send' ? (
-                                            <svg className="w-4 h-4 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                                            </svg>
-                                        ) : (
-                                            <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                                            </svg>
-                                        )}
+                                <button
+                                    onClick={() => setSelectedTx(tx)}
+                                    className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-white/5 active:bg-white/10 transition-colors"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        {/* Icon */}
+                                        <div className={`w-9 h-9 rounded-full flex items-center justify-center ${tx.type === 'receive'
+                                            ? 'bg-emerald-500/10'
+                                            : tx.type === 'send'
+                                                ? 'bg-pink-500/10'
+                                                : 'bg-blue-500/10'
+                                            }`}>
+                                            {tx.type === 'receive' ? (
+                                                <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                                </svg>
+                                            ) : tx.type === 'send' ? (
+                                                <svg className="w-4 h-4 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                                                </svg>
+                                            ) : (
+                                                <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                                </svg>
+                                            )}
+                                        </div>
+
+                                        {/* Info */}
+                                        <div>
+                                            <p className="font-medium text-white text-sm">{getTypeLabel(tx.type)}</p>
+                                            <p className="text-xs text-zinc-500">
+                                                {tx.type === 'receive'
+                                                    ? `${t.activity.from} ${tx.from.slice(0, 6)}...${tx.from.slice(-4)}`
+                                                    : `${t.activity.to} ${tx.to.slice(0, 6)}...${tx.to.slice(-4)}`
+                                                }
+                                            </p>
+                                        </div>
                                     </div>
 
-                                    {/* Info */}
-                                    <div>
-                                        <p className="font-medium text-white text-sm">{getTypeLabel(tx.type)}</p>
-                                        <p className="text-xs text-zinc-500">
-                                            {tx.type === 'receive'
-                                                ? `${t.activity.from} ${tx.from.slice(0, 6)}...${tx.from.slice(-4)}`
-                                                : `${t.activity.to} ${tx.to.slice(0, 6)}...${tx.to.slice(-4)}`
-                                            }
+                                    {/* Amount & Time */}
+                                    <div className="text-right">
+                                        <p className={`font-medium text-sm ${tx.type === 'receive' ? 'text-emerald-400' : 'text-white'
+                                            }`}>
+                                            {tx.type === 'receive' ? '+' : '-'}{parseFloat(tx.tokenAmount || '0').toFixed(4)} {tx.tokenSymbol}
                                         </p>
+                                        <p className="text-xs text-zinc-500">{getRelativeTime(tx.timestamp)}</p>
                                     </div>
-                                </div>
-
-                                {/* Amount & Time */}
-                                <div className="text-right">
-                                    <p className={`font-medium text-sm ${tx.type === 'receive' ? 'text-emerald-400' : 'text-white'
-                                        }`}>
-                                        {tx.type === 'receive' ? '+' : '-'}{parseFloat(tx.tokenAmount || '0').toFixed(4)} {tx.tokenSymbol}
-                                    </p>
-                                    <p className="text-xs text-zinc-500">{getRelativeTime(tx.timestamp)}</p>
-                                </div>
-                            </button>
+                                </button>
+                            </motion.div>
                         ))}
                     </div>
                 )}
 
                 {/* Load More Button */}
                 {!isLoading && transactions.length > 0 && hasMore && (
-                    <button
-                        onClick={loadMore}
-                        disabled={isLoadingMore}
-                        className="w-full py-3 text-center text-sm font-medium text-pink-400 hover:text-pink-300 hover:bg-white/5 transition-colors disabled:opacity-50"
-                    >
-                        {isLoadingMore ? (
-                            <span className="flex items-center justify-center gap-2">
-                                <span className="w-4 h-4 border-2 border-pink-400 border-t-transparent rounded-full animate-spin" />
-                                {t.common.loading}
-                            </span>
-                        ) : (
-                            t.activity.loadMore
-                        )}
-                    </button>
+                    <div className="p-2">
+                        <AnimatedButton
+                            variant="glass"
+                            fullWidth
+                            onClick={loadMore}
+                            disabled={isLoadingMore}
+                        >
+                            {isLoadingMore ? (
+                                <span className="flex items-center justify-center gap-2">
+                                    <span className="w-4 h-4 border-2 border-pink-400 border-t-transparent rounded-full animate-spin" />
+                                    {t.common.loading}
+                                </span>
+                            ) : (
+                                t.activity.loadMore
+                            )}
+                        </AnimatedButton>
+                    </div>
                 )}
             </div>
 

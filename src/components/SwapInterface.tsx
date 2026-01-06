@@ -263,7 +263,7 @@ export default function SwapInterface() {
                         <span className="text-sm font-semibold text-zinc-500">{t.swap.buy}</span>
                     </div>
 
-                    <div className="flex items-center gap-3 py-1">
+                    <div className={`flex items-center gap-3 py-1 ${isQuoteLoading ? 'opacity-50 animate-pulse' : ''}`}>
                         <AmountInput
                             value={amountOut}
                             onChange={() => { }}

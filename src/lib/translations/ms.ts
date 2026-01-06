@@ -1,4 +1,4 @@
-import type { Translations } from '../i18n';
+﻿import type { Translations } from '../i18n';
 
 export const ms: Translations = {
     nav: {
@@ -40,7 +40,8 @@ export const ms: Translations = {
         hash: 'Hash Transaksi',
         network: 'Rangkaian',
         viewExplorer: 'Lihat di WorldScan',
-        transactions: 'Transaksi',
+        transactions: '',
+        error: 'Failed to load activity',
     },
     tokens: {
         title: 'Token',
@@ -217,8 +218,8 @@ export const ms: Translations = {
         teamTitle: 'Pasukan',
         founderRole: 'Pengasas & Pemaju',
         teamName: 'Pasukan OrbId Labs',
-        developedBy: 'Dibangunkan dengan ❤️ oleh',
-        madeIn: 'Dibuat di Colombia 🇨🇴',
+        developedBy: 'Dibangunkan dengan â¤ï¸ oleh',
+        madeIn: 'Dibuat di Colombia ðŸ‡¨ðŸ‡´',
     },
     help: {
         title: 'Bantuan & Sokongan',
@@ -233,7 +234,7 @@ export const ms: Translations = {
         selectTopic: 'Pilih topik untuk mendapatkan bantuan:',
         topicGeneral: 'Soalan Umum',
         topicGeneralDesc: 'Cara menggunakan OrbId Wallet',
-        topicTransactions: 'Transaksi',
+        topicTransactions: '',
         topicTransactionsDesc: 'Hantar, terima, atau tx yang menunggu',
         topicAccount: 'Masalah Akaun',
         topicAccountDesc: 'Log masuk, pengesahan, atau akses',
@@ -319,6 +320,21 @@ export const ms: Translations = {
         connectionError: 'Ralat sambungan. Sila cuba lagi.',
     },
     receive: {
-        worldChainWarning: 'Hanya hantar token yang serasi dengan World Chain ke alamat ini.',
+        worldChainWarning: 'Only send World Chain compatible tokens to this address.',
+    },
+    grants: {
+        title: 'Worldcoin Grants',
+        checking: 'Checking eligibility...',
+        unableToLoad: 'Unable to Load',
+        fetchError: 'Could not fetch grant information. Please try again.',
+        available: 'Grant Available!',
+        next: 'Next Grant',
+        readyToClaim: 'You have a Worldcoin grant ready to claim.',
+        availableOn: 'Your next grant will be available on',
+        openApp: 'Open World App to Claim',
+        starts: 'Starts',
+        ends: 'Ends',
     },
 };
+
+

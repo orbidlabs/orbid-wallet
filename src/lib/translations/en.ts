@@ -41,6 +41,7 @@ export const en: Translations = {
         network: 'Network',
         viewExplorer: 'View on WorldScan',
         transactions: 'Transactions',
+        error: 'Failed to load activity',
     },
     tokens: {
         title: 'Tokens',
@@ -320,5 +321,18 @@ export const en: Translations = {
     },
     receive: {
         worldChainWarning: 'Only send World Chain compatible tokens to this address.',
+    },
+    grants: {
+        title: 'Worldcoin Grants',
+        checking: 'Checking eligibility...',
+        unableToLoad: 'Unable to Load',
+        fetchError: 'Could not fetch grant information. Please try again.',
+        available: 'Grant Available!',
+        next: 'Next Grant',
+        readyToClaim: 'You have a Worldcoin grant ready to claim.',
+        availableOn: 'Your next grant will be available on',
+        openApp: 'Open World App to Claim',
+        starts: 'Starts',
+        ends: 'Ends',
     },
 };
