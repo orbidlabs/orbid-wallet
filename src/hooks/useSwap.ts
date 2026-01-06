@@ -142,20 +142,31 @@ export function useSwap({
                     }]
                 });
             } else if (version === 'v3') {
+                console.log('Using Uniswap V3 Router:', router);
+                const v3Args = [
+                    tokenIn.address,
+                    tokenOut.address,
+                    poolFee,
+                    walletAddress,
+                    amountIn,
+                    amountOutMin,
+                    '0'
+                ];
+                console.log('V3 Params:', {
+                    router,
+                    poolFee,
+                    args: v3Args,
+                    permit2Token: tokenInLower,
+                    permit2Amount: amountIn,
+                    permit2Spender: router
+                });
+
                 result = await MiniKit.commandsAsync.sendTransaction({
                     transaction: [{
                         address: router as `0x${string}`,
                         abi: SWAP_ROUTER_V3_ABI,
                         functionName: 'exactInputSingle',
-                        args: [[
-                            tokenIn.address,
-                            tokenOut.address,
-                            poolFee,
-                            walletAddress,
-                            amountIn,
-                            amountOutMin,
-                            '0'
-                        ]]
+                        args: [v3Args]
                     }],
                     permit2: [{
                         permitted: { token: tokenInLower, amount: amountIn },
