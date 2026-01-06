@@ -2,21 +2,10 @@
 
 import { useState, useCallback } from 'react';
 import { MiniKit } from '@worldcoin/minikit-js';
-import { encodeAbiParameters, parseAbiParameters, type Hex } from 'viem';
+import { parseUnits } from 'viem';
 import { SWAP_CONFIG, UNISWAP_ADDRESSES } from '@/lib/uniswap/config';
+import { PERMIT2_ABI } from '@/lib/uniswap/permit2-abi';
 import type { Token, SwapQuote, SwapState } from '@/lib/uniswap/types';
-
-const UNIVERSAL_ROUTER_ABI = [{
-    name: 'execute',
-    type: 'function',
-    inputs: [
-        { name: 'commands', type: 'bytes' },
-        { name: 'inputs', type: 'bytes[]' },
-        { name: 'deadline', type: 'uint256' }
-    ],
-    outputs: [],
-    stateMutability: 'payable'
-}] as const;
 
 interface UseSwapParams {
     tokenIn: Token | null;
@@ -29,12 +18,6 @@ interface UseSwapResult {
     state: SwapState;
     executeSwap: () => Promise<void>;
     reset: () => void;
-}
-
-function encodePathV3(tokenIn: string, fee: number, tokenOut: string): Hex {
-    return (tokenIn.toLowerCase() +
-        fee.toString(16).padStart(6, '0') +
-        tokenOut.toLowerCase().slice(2)) as Hex;
 }
 
 export function useSwap({
@@ -65,60 +48,60 @@ export function useSwap({
             return;
         }
 
-        let version: 'v2' | 'v3' | 'v4' | undefined;
-        let amountIn: string | undefined;
-
         try {
             setState(s => ({ ...s, status: 'swapping', quote }));
 
-            amountIn = quote.amountIn.toString();
+            const amountIn = quote.amountIn.toString();
             const amountOutMin = quote.amountOutMin.toString();
-            const deadline = BigInt(Math.floor(Date.now() / 1000) + (SWAP_CONFIG.DEFAULT_DEADLINE_MINUTES * 60));
-            const poolFee = quote.route.pools[0]?.fee || SWAP_CONFIG.FEE_TIERS.MEDIUM;
-            version = quote.route.version;
-            const router = UNISWAP_ADDRESSES.UNIVERSAL_ROUTER;
-            const tokenInLower = tokenIn.address.toLowerCase() as `0x${string}`;
+
+            const deadline = Math.floor((Date.now() + SWAP_CONFIG.DEFAULT_DEADLINE_MINUTES * 60 * 1000) / 1000);
+
             const nonce = Date.now().toString();
 
-            let command: Hex;
-            let encodedInput: Hex;
+            const tokenInLower = tokenIn.address.toLowerCase() as `0x${string}`;
 
-            if (version === 'v3') {
-                command = '0x00'; // V3_SWAP_EXACT_IN
-                const path = encodePathV3(tokenIn.address, poolFee, tokenOut.address);
-                encodedInput = encodeAbiParameters(
-                    parseAbiParameters('address, uint256, uint256, bytes, bool'),
-                    [walletAddress as `0x${string}`, BigInt(amountIn), BigInt(amountOutMin), path, true]
-                );
-            } else {
-                command = '0x08'; // V2_SWAP_EXACT_IN
-                encodedInput = encodeAbiParameters(
-                    parseAbiParameters('address, uint256, uint256, address[], bool'),
-                    [walletAddress as `0x${string}`, BigInt(amountIn), BigInt(amountOutMin), [tokenIn.address as Hex, tokenOut.address as Hex], true]
-                );
-            }
+            const permitData = [
+                [tokenInLower, amountIn],
+                nonce,
+                deadline.toString(),
+            ];
 
-            console.log('Executing Universal Router Swap:', {
-                version,
-                router,
-                method: 'execute',
-                command,
-                encodedInput
+            const transferDetails = [
+                UNISWAP_ADDRESSES.UNIVERSAL_ROUTER,
+                amountIn,
+            ];
+
+            console.log('Executing swap via Permit2:', {
+                permit2Address: UNISWAP_ADDRESSES.PERMIT2,
+                universalRouter: UNISWAP_ADDRESSES.UNIVERSAL_ROUTER,
+                tokenIn: tokenInLower,
+                tokenOut: tokenOut.address,
+                amountIn,
+                amountOutMin,
+                method: 'permitTransferFrom',
             });
 
             const result = await MiniKit.commandsAsync.sendTransaction({
                 transaction: [{
-                    address: router as `0x${string}`,
-                    abi: UNIVERSAL_ROUTER_ABI,
-                    functionName: 'execute',
-                    args: [command, [encodedInput], deadline]
+                    address: UNISWAP_ADDRESSES.PERMIT2 as `0x${string}`,
+                    abi: PERMIT2_ABI,
+                    functionName: 'permitTransferFrom',
+                    args: [
+                        permitData,
+                        transferDetails,
+                        walletAddress,
+                        'PERMIT2_SIGNATURE_PLACEHOLDER_0',
+                    ],
                 }],
                 permit2: [{
-                    permitted: { token: tokenInLower, amount: amountIn },
-                    spender: router as `0x${string}`,
+                    permitted: {
+                        token: tokenInLower,
+                        amount: amountIn,
+                    },
                     nonce,
                     deadline: deadline.toString(),
-                }]
+                    spender: UNISWAP_ADDRESSES.UNIVERSAL_ROUTER as `0x${string}`,
+                }],
             });
 
             if (!result) {
@@ -133,20 +116,27 @@ export function useSwap({
                     error: null,
                 });
             } else {
-                const error = JSON.stringify(result.finalPayload, null, 2);
-                throw new Error(error);
+                const errorPayload = result.finalPayload;
+                let errorMessage = JSON.stringify(errorPayload, null, 2);
+
+                if ('error_code' in errorPayload && errorPayload.error_code === 'invalid_contract') {
+                    errorMessage = `Contract not whitelisted. Add to Developer Portal:\n` +
+                        `Permit2: ${UNISWAP_ADDRESSES.PERMIT2}\n` +
+                        `Token: ${tokenInLower}`;
+                }
+
+                throw new Error(errorMessage);
             }
 
         } catch (error) {
             console.error('Swap failed:', error);
             const errorMessage = error instanceof Error ? error.message : String(error);
             const context = JSON.stringify({
-                version,
-                router: UNISWAP_ADDRESSES.UNIVERSAL_ROUTER,
+                permit2: UNISWAP_ADDRESSES.PERMIT2,
+                universalRouter: UNISWAP_ADDRESSES.UNIVERSAL_ROUTER,
                 tokenIn: tokenIn.address,
                 tokenOut: tokenOut.address,
-                amountIn,
-                method: 'execute',
+                method: 'permitTransferFrom',
                 isMiniKitInstalled: MiniKit.isInstalled()
             }, null, 2);
 
