@@ -4,7 +4,6 @@ import "./globals.css";
 import Providers from "@/components/Providers";
 import { Analytics } from "@vercel/analytics/react";
 
-// Premium fonts
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],

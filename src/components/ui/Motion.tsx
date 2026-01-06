@@ -3,7 +3,6 @@
 import { motion, HTMLMotionProps } from 'framer-motion';
 import { ReactNode } from 'react';
 
-// Animated gradient button with hover and tap effects
 interface AnimatedButtonProps extends Omit<HTMLMotionProps<'button'>, 'children'> {
     children: ReactNode;
     variant?: 'gradient' | 'glass' | 'ghost';
@@ -46,7 +45,6 @@ export function AnimatedButton({
     );
 }
 
-// Modal/card fade-in animation wrapper
 interface FadeInProps {
     children: ReactNode;
     delay?: number;
@@ -75,7 +73,6 @@ export function FadeIn({ children, delay = 0, direction = 'up', className = '' }
     );
 }
 
-// Staggered container for list items
 interface StaggerContainerProps {
     children: ReactNode;
     className?: string;
@@ -116,7 +113,6 @@ export function StaggerItem({ children, className = '' }: { children: ReactNode;
     );
 }
 
-// Pressable item for lists (tokens, transactions, etc.)
 interface PressableProps extends Omit<HTMLMotionProps<'button'>, 'children'> {
     children: ReactNode;
 }
@@ -135,7 +131,6 @@ export function Pressable({ children, className = '', ...props }: PressableProps
     );
 }
 
-// Icon button with scale animation
 interface IconButtonProps extends Omit<HTMLMotionProps<'button'>, 'children'> {
     children: ReactNode;
     variant?: 'default' | 'pink' | 'emerald' | 'blue';
@@ -162,7 +157,6 @@ export function IconButton({ children, variant = 'default', className = '', ...p
     );
 }
 
-// Modal backdrop with fade
 export function ModalBackdrop({ children, onClose }: { children: ReactNode; onClose?: () => void }) {
     return (
         <motion.div
@@ -180,7 +174,6 @@ export function ModalBackdrop({ children, onClose }: { children: ReactNode; onCl
     );
 }
 
-// Modal content with slide-up animation
 export function ModalContent({ children, className = '' }: { children: ReactNode; className?: string }) {
     return (
         <motion.div
@@ -195,7 +188,6 @@ export function ModalContent({ children, className = '' }: { children: ReactNode
     );
 }
 
-// Animated number for balances/prices
 export function AnimatedNumber({ value, prefix = '', suffix = '' }: { value: number; prefix?: string; suffix?: string }) {
     return (
         <motion.span
@@ -209,7 +201,6 @@ export function AnimatedNumber({ value, prefix = '', suffix = '' }: { value: num
     );
 }
 
-// Pulse animation for loading/active states
 export function Pulse({ children, className = '' }: { children: ReactNode; className?: string }) {
     return (
         <motion.div

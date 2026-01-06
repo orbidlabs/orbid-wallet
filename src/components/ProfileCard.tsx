@@ -34,7 +34,6 @@ export default function ProfileCard({
         if (isLoggingOut) return;
 
         setIsLoggingOut(true);
-        // Wait for animation to complete before disconnecting
         await new Promise(resolve => setTimeout(resolve, 800));
         onDisconnect();
     };
@@ -68,7 +67,6 @@ export default function ProfileCard({
                 layout
                 className="glass rounded-2xl p-4"
             >
-                {/* Header - Always visible */}
                 <motion.button
                     type="button"
                     onClick={() => setIsExpanded(!isExpanded)}
@@ -82,11 +80,9 @@ export default function ProfileCard({
                         <Identicon address={address} size={56} />
                     </motion.div>
                     <div className="flex-1 min-w-0">
-                        {/* World ID Username with Verification Badge */}
                         {username ? (
                             <div className="flex items-center gap-1.5 mb-0.5">
                                 <span className="font-bold text-white text-lg">@{username}</span>
-                                {/* Verified badge - only shown for World ID verified users */}
                                 {isVerifiedHuman && <MdVerified className="w-[18px] h-[18px] text-[#1D9BF0]" />}
                             </div>
                         ) : (
@@ -99,7 +95,6 @@ export default function ProfileCard({
                                 />
                             </div>
                         )}
-                        {/* Show address as secondary when username exists */}
                         {username && (
                             <p className="text-xs text-zinc-500 font-mono">{displayAddress}</p>
                         )}
@@ -123,8 +118,6 @@ export default function ProfileCard({
                         </svg>
                     </motion.div>
                 </motion.button>
-
-                {/* Expandable Content */}
                 <AnimatePresence>
                     {isExpanded && (
                         <motion.div
@@ -135,7 +128,6 @@ export default function ProfileCard({
                             className="overflow-hidden"
                         >
                             <div className="mt-4 pt-4 border-t border-white/5">
-                                {/* WLD Balance */}
                                 <motion.div
                                     initial={{ opacity: 0, x: -10 }}
                                     animate={{ opacity: 1, x: 0 }}
@@ -146,7 +138,6 @@ export default function ProfileCard({
                                     <span className="text-xl font-semibold text-pink-400">{wldBalance} WLD</span>
                                 </motion.div>
 
-                                {/* Action Buttons */}
                                 <motion.div
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -215,7 +206,6 @@ export default function ProfileCard({
                                     </motion.button>
                                 </motion.div>
 
-                                {/* Network Info */}
                                 <motion.div
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}

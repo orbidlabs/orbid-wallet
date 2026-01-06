@@ -111,14 +111,6 @@ export function useTransactionHistory(walletAddress?: string) {
                 if (isLoadMore && pageKeysRef.current.sent) {
                     sentParams.pageKey = pageKeysRef.current.sent;
                 }
-                // If isLoadMore is true but sent key is null (undefined check passed?), wait.
-                // The pageKey from Alchemy is 'undefined' if no more pages.
-                // So if pageKeysRef.current.sent is undefined, we shouldn't fetch.
-                // My check above: (!isLoadMore || pageKeysRef.current.sent !== undefined)
-                // If isLoadMore=true, we need pageKeysRef.current.sent !== undefined.
-                // This seems correct assuming we initialize ref to {} (undefined properties).
-                // Wait, initial load: ref is {}. sent is undefined. !isLoadMore is true. We fetch. Correct.
-                // Load more: send is undefined (exhausted). !isLoadMore is false. undefined!==undefined is false. We SKIP. Correct.
 
                 requestTypes.push('sent');
                 promises.push(

@@ -75,7 +75,6 @@ export default function GrantModal({ isOpen, onClose, walletAddress }: GrantModa
                     exit={{ scale: 0.95, opacity: 0, y: 20 }}
                     className="relative w-full max-w-sm bg-zinc-900 rounded-3xl overflow-hidden border border-white/10 shadow-2xl"
                 >
-                    {/* Header */}
                     <div className="p-4 border-b border-white/5 flex items-center justify-between">
                         <h2 className="text-lg font-bold text-white">{t.grants.title}</h2>
                         <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full transition-colors">

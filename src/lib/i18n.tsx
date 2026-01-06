@@ -3181,14 +3181,12 @@ export const LANGUAGES: LanguageInfo[] = [
 
 // Translation keys
 export interface Translations {
-    // Navigation
     nav: {
         wallet: string;
         activity: string;
         swap: string;
         profile: string;
     };
-    // Profile
     profile: {
         totalBalance: string;
         copyAddress: string;
@@ -3202,7 +3200,6 @@ export interface Translations {
         chainId: string;
         connected: string;
     };
-    // Activity
     activity: {
         title: string;
         noActivity: string;
@@ -3226,7 +3223,6 @@ export interface Translations {
         transactions: string;
         error: string;
     };
-    // Tokens
     tokens: {
         title: string;
         send: string;
@@ -3237,7 +3233,6 @@ export interface Translations {
         price: string;
         change24h: string;
     };
-    // Modals
     modals: {
         send: string;
         receive: string;
@@ -3268,7 +3263,6 @@ export interface Translations {
         transactionFailed: string;
         transactionRejected: string;
     };
-    // Settings
     settings: {
         title: string;
         language: string;
@@ -3281,7 +3275,6 @@ export interface Translations {
         version: string;
         tagline: string;
     };
-    // Swap
     swap: {
         comingSoon: string;
         underDevelopment: string;
@@ -3311,14 +3304,12 @@ export interface Translations {
         sell: string;
         buy: string;
     };
-    // Token Selector
     tokenSelector: {
         selectToken: string;
         yourTokens: string;
         tokensByVolume: string;
         searchPlaceholder: string;
     };
-    // Swap Settings
     swapSettings: {
         tradeOptions: string;
         maxSlippage: string;
@@ -3334,7 +3325,6 @@ export interface Translations {
         enableV3: string;
         enableV4: string;
     };
-    // Swap Confirm
     swapConfirm: {
         networkCost: string;
         maxSlippage: string;
@@ -3348,7 +3338,6 @@ export interface Translations {
         showLess: string;
         slippageTooltip: string;
     };
-    // Ads
     ads: {
         showAnnouncements: string;
         orbidLive: string;
@@ -3359,7 +3348,6 @@ export interface Translations {
         oidTokens: string;
         oidTokensDesc: string;
     };
-    // Notifications
     notifications: {
         title: string;
         enable: string;
@@ -3376,14 +3364,12 @@ export interface Translations {
         hoursAgo: string;
         daysAgo: string;
     };
-    // Newsletter
     newsletter: {
         title: string;
         description: string;
         button: string;
         skip: string;
     };
-    // Common
     common: {
         loading: string;
         error: string;
@@ -3394,7 +3380,6 @@ export interface Translations {
         backToSettings: string;
         done: string;
     };
-    // About Modal
     about: {
         title: string;
         version: string;
@@ -3416,7 +3401,6 @@ export interface Translations {
         developedBy: string;
         madeIn: string;
     };
-    // Help Modal
     help: {
         title: string;
         faqTitle: string;
@@ -3457,7 +3441,6 @@ export interface Translations {
         ticketNotFound: string;
         noFaqs: string;
     };
-    // Wallet/Login Screen
     wallet: {
         openFromWorldApp: string;
         scanWithPhone: string;
@@ -3470,7 +3453,6 @@ export interface Translations {
         and: string;
         privacyLink: string;
     };
-    // World ID Verification
     worldId: {
         title: string;
         description: string;
@@ -3482,7 +3464,6 @@ export interface Translations {
         openInWorldAppError: string;
         verificationFailed: string;
     };
-    // Buy Modal
     buy: {
         title: string;
         comingSoon: string;
@@ -3493,7 +3474,6 @@ export interface Translations {
         instantPurchases: string;
         gotIt: string;
     };
-    // Token Detail Modal
     tokenDetail: {
         yourBalance: string;
         marketStats: string;
@@ -3511,21 +3491,17 @@ export interface Translations {
         ago1y: string;
         start: string;
     };
-    // Social
     social: {
         followUs: string;
         comingSoon: string;
     };
-    // Validation errors
     validation: {
         invalidEmail: string;
         connectionError: string;
     };
-    // Receive Modal specific
     receive: {
         worldChainWarning: string;
     };
-    // Worldcoin Grants
     grants: {
         title: string;
         checking: string;

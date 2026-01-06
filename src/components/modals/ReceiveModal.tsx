@@ -70,7 +70,6 @@ export default function ReceiveModal({ isOpen, onClose, walletAddress }: Receive
             {isOpen && (
                 <ModalBackdrop onClose={onClose}>
                     <ModalContent>
-                        {/* Header */}
                         <div className="px-5 py-4 flex items-center justify-between border-b border-white/5">
                             <h2 className="text-lg font-bold text-white">{t.modals.receive}</h2>
                             <button
@@ -84,7 +83,6 @@ export default function ReceiveModal({ isOpen, onClose, walletAddress }: Receive
                         </div>
 
                         <div className="px-5 py-6 flex flex-col items-center">
-                            {/* QR Code Container */}
                             <FadeIn delay={0.1}>
                                 <div className="p-4 glass rounded-2xl mb-5">
                                     <canvas
@@ -95,7 +93,6 @@ export default function ReceiveModal({ isOpen, onClose, walletAddress }: Receive
                                 </div>
                             </FadeIn>
 
-                            {/* Network Badge */}
                             <FadeIn delay={0.2}>
                                 <div className="inline-flex items-center gap-1.5 px-3 py-1.5 glass rounded-full mb-4">
                                     <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
@@ -103,7 +100,6 @@ export default function ReceiveModal({ isOpen, onClose, walletAddress }: Receive
                                 </div>
                             </FadeIn>
 
-                            {/* Address */}
                             <FadeIn delay={0.25}>
                                 <p className="text-base font-mono text-white mb-1">{shortAddress}</p>
                                 <p className="text-xs text-zinc-500 text-center mb-6">
@@ -111,7 +107,6 @@ export default function ReceiveModal({ isOpen, onClose, walletAddress }: Receive
                                 </p>
                             </FadeIn>
 
-                            {/* Action Buttons */}
                             <FadeIn delay={0.3} className="w-full">
                                 <div className="flex gap-3 w-full">
                                     <AnimatedButton
@@ -148,7 +143,7 @@ export default function ReceiveModal({ isOpen, onClose, walletAddress }: Receive
                                 </div>
                             </FadeIn>
 
-                            {/* Warning */}
+
                             <FadeIn delay={0.35} className="w-full">
                                 <div className="mt-5 glass rounded-xl p-3 w-full">
                                     <div className="flex items-start gap-2.5">

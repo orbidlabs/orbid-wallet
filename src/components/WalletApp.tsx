@@ -18,7 +18,6 @@ import { AnimatedButton, FadeIn } from './ui/Motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { useI18n } from '@/lib/i18n';
 
-// Lazy load heavy modals (reduces initial bundle by ~100KB)
 const TokenDetailModal = lazy(() => import('./modals/TokenDetailModal'));
 const SendModal = lazy(() => import('./modals/SendModal'));
 const ReceiveModal = lazy(() => import('./modals/ReceiveModal'));
@@ -26,7 +25,6 @@ const BuyModal = lazy(() => import('./modals/BuyModal'));
 const SettingsModal = lazy(() => import('./modals/SettingsModal'));
 const GrantModal = lazy(() => import('./modals/GrantModal'));
 
-// Loading fallback for modals
 const ModalLoader = () => (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
         <div className="w-8 h-8 border-2 border-pink-500 border-t-transparent rounded-full animate-spin" />
@@ -60,7 +58,6 @@ export default function WalletApp() {
     const wldBalance = balances.find(b => b.token.symbol === 'WLD')?.balance || '0';
     const [showGrantModal, setShowGrantModal] = useState(false);
 
-    // Loading state
     if (!isReady) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center">
@@ -80,20 +77,16 @@ export default function WalletApp() {
         );
     }
 
-    // Not authenticated - show connect screen
     if (!isAuthenticated) {
-        // Browser users - show QR code to open in World App
         if (!isInWorldApp) {
             return (
                 <div className="min-h-screen bg-black flex flex-col items-center justify-center p-8 relative">
-                    {/* Static gradient background */}
                     <div className="absolute inset-0 overflow-hidden pointer-events-none">
                         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-pink-500/10 rounded-full blur-[120px]" />
                         <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-purple-500/10 rounded-full blur-[100px]" />
                     </div>
 
                     <div className="relative max-w-sm w-full text-center">
-                        {/* Logo */}
                         <div className="w-24 h-24 mx-auto mb-6 relative">
                             <Image src="/logo.svg" alt="OrbId" fill sizes="96px" priority />
                         </div>
@@ -105,7 +98,6 @@ export default function WalletApp() {
                             {t.wallet.openFromWorldApp}
                         </p>
 
-                        {/* QR Code */}
                         <div className="bg-white p-4 rounded-2xl mx-auto w-fit mb-6">
                             <QRCodeSVG
                                 value={WORLD_APP_DEEP_LINK}
@@ -130,7 +122,6 @@ export default function WalletApp() {
                             {t.wallet.poweredBy}
                         </p>
 
-                        {/* Developer Bypass - in development or Vercel preview */}
                         {(process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview') && (
                             <button
                                 onClick={loginAsDev}
@@ -144,17 +135,14 @@ export default function WalletApp() {
             );
         }
 
-        // World App users - show connect button
         return (
             <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 relative">
-                {/* Static gradient background */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
                     <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-72 h-72 bg-pink-500/10 rounded-full blur-[100px]" />
                     <div className="absolute bottom-1/4 left-1/3 w-48 h-48 bg-purple-500/10 rounded-full blur-[80px]" />
                 </div>
 
                 <div className="relative max-w-xs w-full text-center">
-                    {/* Logo - smaller for mobile */}
                     <div className="w-20 h-20 mx-auto mb-6 relative">
                         <Image src="/logo.svg" alt="OrbId" fill sizes="80px" priority />
                     </div>
@@ -164,7 +152,6 @@ export default function WalletApp() {
                     </h1>
                     <p className="text-zinc-400 text-sm mb-8">{t.wallet.gateway}</p>
 
-                    {/* Connect Button - smaller */}
                     <button
                         onClick={loginWithWorldApp}
                         className="w-full py-3 px-5 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold rounded-xl shadow-lg shadow-pink-500/20 hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-sm"
@@ -191,10 +178,8 @@ export default function WalletApp() {
         );
     }
 
-    // Authenticated with wallet - show wallet app
     return (
         <div className="min-h-screen bg-black pb-32">
-            {/* Header */}
             <motion.header
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -223,7 +208,6 @@ export default function WalletApp() {
                 </div>
             </motion.header>
 
-            {/* Main Content */}
             <main className="px-4 py-4 max-w-md mx-auto">
                 <AnimatePresence mode="wait">
                     {activeTab === 'wallet' && (
@@ -233,7 +217,7 @@ export default function WalletApp() {
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: 20 }}
                             transition={{ duration: 0.2 }}
-                            className="flex flex-col gap-8" /* 32px gap between main sections */
+                            className="flex flex-col gap-8"
                         >
                             <ProfileCard
                                 address={walletAddress!}
@@ -252,10 +236,10 @@ export default function WalletApp() {
                                 onBuy={() => setShowBuyModal(true)}
                                 onGrant={() => setShowGrantModal(true)}
                             />
-                            <div className="flex flex-col gap-4"> {/* 16px gap between secondary items */}
+                            <div className="flex flex-col gap-4">
                                 <WorldIDVerify />
                                 <SocialLinks />
-                                <div className="h-4" /> {/* Extra buffer before BottomNav */}
+                                <div className="h-4" />
                             </div>
                         </motion.div>
                     )}
@@ -284,11 +268,10 @@ export default function WalletApp() {
                 </AnimatePresence>
             </main>
 
-            {/* Bottom Navigation */}
+
+
             <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
 
-            {/* Modals */}
-            {/* Lazy-loaded modals with Suspense */}
             <Suspense fallback={<ModalLoader />}>
                 {selectedToken && (
                     <TokenDetailModal
@@ -348,6 +331,6 @@ export default function WalletApp() {
                     />
                 )}
             </Suspense>
-        </div>
+        </div >
     );
 }

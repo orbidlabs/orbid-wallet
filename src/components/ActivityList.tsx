@@ -11,7 +11,6 @@ interface ActivityListProps {
     walletAddress: string;
 }
 
-// Transaction Detail Modal
 function TransactionDetailModal({
     transaction,
     isOpen,
@@ -49,7 +48,6 @@ function TransactionDetailModal({
             {isOpen && transaction && (
                 <ModalBackdrop onClose={onClose}>
                     <ModalContent>
-                        {/* Header */}
                         <div className="sticky top-0 glass-strong px-4 py-3 flex items-center justify-between border-b border-white/5">
                             <h2 className="text-lg font-bold text-white">{t.activity.transactionDetails}</h2>
                             <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 transition-colors">
@@ -60,7 +58,6 @@ function TransactionDetailModal({
                         </div>
 
                         <div className="p-4 space-y-4">
-                            {/* Transaction Type Icon */}
                             <div className="text-center py-4">
                                 <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center ${transaction.type === 'receive'
                                     ? 'bg-emerald-500/10'
@@ -89,12 +86,11 @@ function TransactionDetailModal({
                                 </span>
                             </div>
 
-                            {/* Details */}
                             <div className="glass rounded-xl p-4 space-y-3">
                                 <div className="flex justify-between">
                                     <span className="text-zinc-500 text-sm">{t.activity.type}</span>
                                     <span className="text-white text-sm">{getTypeLabel(transaction.type)}</span>
-                                </div>
+                                </div >
                                 <div className="flex justify-between">
                                     <span className="text-zinc-500 text-sm">{t.activity.date}</span>
                                     <span className="text-white text-sm">
@@ -127,7 +123,6 @@ function TransactionDetailModal({
                                 </div>
                             </div>
 
-                            {/* View on Explorer Button */}
                             <div className="pb-6">
                                 <AnimatedButton
                                     variant="gradient"
@@ -148,7 +143,6 @@ function TransactionDetailModal({
     );
 }
 
-// Loading Skeleton
 function LoadingSkeleton() {
     return (
         <div className="divide-y divide-white/5">
@@ -185,7 +179,6 @@ export default function ActivityList({ walletAddress }: ActivityListProps) {
         }
     };
 
-    // Error state
     if (error) {
         return (
             <FadeIn>
@@ -213,7 +206,6 @@ export default function ActivityList({ walletAddress }: ActivityListProps) {
         );
     }
 
-    // Empty state
     if (!isLoading && transactions.length === 0) {
         return (
             <FadeIn>
@@ -263,7 +255,6 @@ export default function ActivityList({ walletAddress }: ActivityListProps) {
                                     className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-white/5 active:bg-white/10 transition-colors"
                                 >
                                     <div className="flex items-center gap-3">
-                                        {/* Icon */}
                                         <div className={`w-9 h-9 rounded-full flex items-center justify-center ${tx.type === 'receive'
                                             ? 'bg-emerald-500/10'
                                             : tx.type === 'send'
@@ -285,7 +276,6 @@ export default function ActivityList({ walletAddress }: ActivityListProps) {
                                             )}
                                         </div>
 
-                                        {/* Info */}
                                         <div>
                                             <p className="font-medium text-white text-sm">{getTypeLabel(tx.type)}</p>
                                             <p className="text-xs text-zinc-500">
@@ -297,7 +287,6 @@ export default function ActivityList({ walletAddress }: ActivityListProps) {
                                         </div>
                                     </div>
 
-                                    {/* Amount & Time */}
                                     <div className="text-right">
                                         <p className={`font-medium text-sm ${tx.type === 'receive' ? 'text-emerald-400' : 'text-white'
                                             }`}>
@@ -311,7 +300,6 @@ export default function ActivityList({ walletAddress }: ActivityListProps) {
                     </div>
                 )}
 
-                {/* Load More Button */}
                 {!isLoading && transactions.length > 0 && hasMore && (
                     <div className="p-2">
                         <AnimatedButton
@@ -333,7 +321,6 @@ export default function ActivityList({ walletAddress }: ActivityListProps) {
                 )}
             </div>
 
-            {/* Transaction Detail Modal */}
             <TransactionDetailModal
                 transaction={selectedTx}
                 isOpen={!!selectedTx}

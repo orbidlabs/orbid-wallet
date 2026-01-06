@@ -178,7 +178,8 @@ export default function SendModal({ isOpen, onClose, balances, initialToken }: S
                 setStep('success');
                 showToast({ type: 'success', title: t.modals.transactionSent, message: `${amount} ${selectedToken.token.symbol}`, txHash: hash });
 
-                // Send push notification to recipient (fire and forget)
+                showToast({ type: 'success', title: t.modals.transactionSent, message: `${amount} ${selectedToken.token.symbol}`, txHash: hash });
+
                 fetch('/api/notifications/send', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -256,7 +257,6 @@ export default function SendModal({ isOpen, onClose, balances, initialToken }: S
             {isOpen && (
                 <ModalBackdrop onClose={handleClose}>
                     <ModalContent className="max-h-[85vh] overflow-y-auto">
-                        {/* Header */}
                         <div className="sticky top-0 glass-strong px-5 py-4 flex items-center justify-between border-b border-white/5 z-10">
                             <h2 className="text-lg font-bold text-white">{getTitle()}</h2>
                             <button onClick={handleClose} className="p-2 -mr-2 rounded-full hover:bg-white/10 active:scale-95 transition-all">
@@ -268,7 +268,6 @@ export default function SendModal({ isOpen, onClose, balances, initialToken }: S
 
                         <div className="p-5">
                             <AnimatePresence mode="wait">
-                                {/* Token Selection */}
                                 {step === 'select' && (
                                     <motion.div key="select" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
                                         <StaggerContainer className="space-y-2">
@@ -298,7 +297,6 @@ export default function SendModal({ isOpen, onClose, balances, initialToken }: S
                                     </motion.div>
                                 )}
 
-                                {/* Send Form */}
                                 {step === 'form' && selectedToken && (
                                     <motion.div key="form" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-4">
                                         <div className="flex items-center gap-3 p-3 glass rounded-xl">
@@ -357,7 +355,6 @@ export default function SendModal({ isOpen, onClose, balances, initialToken }: S
                                     </motion.div>
                                 )}
 
-                                {/* Confirmation */}
                                 {step === 'confirm' && selectedToken && (
                                     <motion.div key="confirm" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-4">
                                         <FadeIn className="text-center py-2">
@@ -396,7 +393,6 @@ export default function SendModal({ isOpen, onClose, balances, initialToken }: S
                                     </motion.div>
                                 )}
 
-                                {/* Loading */}
                                 {step === 'loading' && (
                                     <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center py-8">
                                         <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} className="w-16 h-16 mx-auto mb-6 border-4 border-pink-500 border-t-transparent rounded-full" />
@@ -405,7 +401,6 @@ export default function SendModal({ isOpen, onClose, balances, initialToken }: S
                                     </motion.div>
                                 )}
 
-                                {/* Success */}
                                 {step === 'success' && (
                                     <motion.div key="success" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="text-center py-8">
                                         <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200, delay: 0.1 }} className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-r from-emerald-500 to-green-600 flex items-center justify-center">
@@ -424,7 +419,6 @@ export default function SendModal({ isOpen, onClose, balances, initialToken }: S
                                     </motion.div>
                                 )}
 
-                                {/* Error */}
                                 {step === 'error' && (
                                     <motion.div key="error" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="text-center py-8">
                                         <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200, delay: 0.1 }} className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-r from-red-500 to-orange-600 flex items-center justify-center">

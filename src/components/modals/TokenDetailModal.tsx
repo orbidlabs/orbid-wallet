@@ -17,7 +17,6 @@ interface TokenDetailModalProps {
     onBuy?: () => void;
 }
 
-// Format large numbers
 function formatNumber(num: number): string {
     if (num >= 1_000_000_000) return `$${(num / 1_000_000_000).toFixed(2)}B`;
     if (num >= 1_000_000) return `$${(num / 1_000_000).toFixed(2)}M`;
@@ -25,7 +24,6 @@ function formatNumber(num: number): string {
     return `$${num.toFixed(2)}`;
 }
 
-// Format date based on period
 function formatDate(timestamp: number, period: ChartPeriod): string {
     const date = new Date(timestamp);
     if (period === '1d') {
@@ -61,7 +59,6 @@ export default function TokenDetailModal({ tokenBalance, isOpen, onClose, onSend
     const height = 160;
     const padding = 10;
 
-    // Calculate chart data
     const chartData = useMemo(() => {
         if (!marketData?.priceHistory?.length) return null;
 
@@ -81,11 +78,9 @@ export default function TokenDetailModal({ tokenBalance, isOpen, onClose, onSend
         return { points, path, minPrice, maxPrice };
     }, [marketData]);
 
-    // Fixed chart color based on app theme
     const chartColor = DEFAULT_CHART_COLOR;
     const chartGradientId = `gradient-${token.symbol}-${chartPeriod}`;
 
-    // Calculate price change for period display
     const priceChange = useMemo(() => {
         if (!marketData?.priceHistory?.length) return 0;
         const first = marketData.priceHistory[0].price;
@@ -93,7 +88,6 @@ export default function TokenDetailModal({ tokenBalance, isOpen, onClose, onSend
         return ((last - first) / first) * 100;
     }, [marketData]);
 
-    // Handle chart interaction
     const handleChartInteraction = useCallback((clientX: number) => {
         if (!chartRef.current || !chartData) return;
 
@@ -144,14 +138,12 @@ export default function TokenDetailModal({ tokenBalance, isOpen, onClose, onSend
 
     if (!isOpen) return null;
 
-    // Loading skeleton for chart
     const ChartSkeleton = () => (
         <div className="glass rounded-xl p-3">
             <div className="w-full h-32 bg-zinc-800/50 rounded animate-pulse" />
         </div>
     );
 
-    // Loading skeleton for stats
     const StatsSkeleton = () => (
         <div className="grid grid-cols-2 gap-3">
             {[1, 2, 3, 4].map((i) => (
@@ -163,7 +155,6 @@ export default function TokenDetailModal({ tokenBalance, isOpen, onClose, onSend
         </div>
     );
 
-    // Display price - either hovered or current
     const displayPrice = hoveredPoint?.price ?? marketData?.price ?? 0;
     const displayVolume = hoveredPoint?.volume;
     const displayDate = hoveredPoint ? formatDate(hoveredPoint.timestamp, chartPeriod) : null;
@@ -171,7 +162,6 @@ export default function TokenDetailModal({ tokenBalance, isOpen, onClose, onSend
     return (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm">
             <div className="glass rounded-t-3xl sm:rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto animate-slide-up">
-                {/* Header */}
                 <div className="sticky top-0 glass-strong px-4 py-3 flex items-center justify-between border-b border-white/5">
                     <div className="flex items-center gap-3">
                         <TokenIcon
@@ -195,7 +185,6 @@ export default function TokenDetailModal({ tokenBalance, isOpen, onClose, onSend
                     </button>
                 </div>
 
-                {/* Price Section */}
                 <div className="px-4 py-4">
                     <div className="flex items-end gap-3 mb-1">
                         {isLoading && !marketData ? (
@@ -226,7 +215,6 @@ export default function TokenDetailModal({ tokenBalance, isOpen, onClose, onSend
                     </div>
                 </div>
 
-                {/* Chart Period Buttons */}
                 <div className="px-4 pb-2">
                     <div className="flex gap-1 p-1 glass rounded-xl">
                         {(Object.keys(PERIOD_LABELS) as ChartPeriod[]).map((period) => (
@@ -244,7 +232,6 @@ export default function TokenDetailModal({ tokenBalance, isOpen, onClose, onSend
                     </div>
                 </div>
 
-                {/* Interactive Chart */}
                 <div className="px-4 pb-4">
                     {isLoading ? (
                         <ChartSkeleton />
@@ -370,7 +357,6 @@ export default function TokenDetailModal({ tokenBalance, isOpen, onClose, onSend
                     )}
                 </div>
 
-                {/* Your Balance */}
                 <div className="px-4 pb-4">
                     <div className="glass rounded-xl p-4">
                         <p className="text-xs text-zinc-500 mb-2">{t.tokenDetail.yourBalance}</p>
@@ -381,7 +367,6 @@ export default function TokenDetailModal({ tokenBalance, isOpen, onClose, onSend
                     </div>
                 </div>
 
-                {/* Market Stats */}
                 <div className="px-4 pb-4">
                     <h3 className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">{t.tokenDetail.marketStats}</h3>
                     {isLoading && !marketData ? (
@@ -416,7 +401,6 @@ export default function TokenDetailModal({ tokenBalance, isOpen, onClose, onSend
                     )}
                 </div>
 
-                {/* Price Changes */}
                 {marketData && (marketData.change24h !== 0 || marketData.change7d !== 0) && (
                     <div className="px-4 pb-4">
                         <div className="glass rounded-xl p-4 flex justify-around">
@@ -436,7 +420,6 @@ export default function TokenDetailModal({ tokenBalance, isOpen, onClose, onSend
                     </div>
                 )}
 
-                {/* Action Buttons */}
                 <div className="px-4 pb-6">
                     <div className="flex gap-3">
                         <button
