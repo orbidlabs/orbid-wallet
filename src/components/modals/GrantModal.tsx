@@ -127,12 +127,33 @@ export default function GrantModal({ isOpen, onClose, walletAddress }: GrantModa
 function GrantContent({ info }: { info: GrantCycle }) {
     const { t } = useI18n();
     const now = new Date();
-    const startDate = new Date(info.grant_cycle_start_date);
-    const endDate = new Date(info.grant_cycle_end_date);
-    const isAvailable = now >= startDate && now < endDate;
+
+    const formatDate = (dateString: string) => {
+        try {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return '-';
+            return date.toLocaleDateString();
+        } catch {
+            return '-';
+        }
+    };
+
+    const getValidDate = (dateString: string) => {
+        try {
+            const date = new Date(dateString);
+            return isNaN(date.getTime()) ? null : date;
+        } catch {
+            return null;
+        }
+    };
+
+    const startDate = getValidDate(info.grant_cycle_start_date);
+    const endDate = getValidDate(info.grant_cycle_end_date);
+    const isAvailable = startDate && endDate && now >= startDate && now < endDate;
 
     const handleOpenWorldApp = () => {
-        window.open('https://worldcoin.org', '_blank');
+        window.open('https://worldcoin.org/mini-app?app_id=grants&app_mode=native', '_blank');
     };
 
     return (
@@ -150,7 +171,9 @@ function GrantContent({ info }: { info: GrantCycle }) {
                 <p className="text-zinc-400 text-sm">
                     {isAvailable
                         ? t.grants.readyToClaim
-                        : `${t.grants.availableOn} ${startDate.toLocaleDateString()}`}
+                        : startDate
+                            ? `${t.grants.availableOn} ${startDate.toLocaleDateString()}`
+                            : 'Check back later'}
                 </p>
             </div>
 
@@ -165,11 +188,11 @@ function GrantContent({ info }: { info: GrantCycle }) {
                 <div className="w-full p-4 bg-zinc-800/50 rounded-2xl border border-white/5">
                     <div className="flex justify-between items-center text-sm mb-2">
                         <span className="text-zinc-500">{t.grants.starts}</span>
-                        <span className="text-white">{startDate.toLocaleDateString()}</span>
+                        <span className="text-white">{formatDate(info.grant_cycle_start_date)}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                         <span className="text-zinc-500">{t.grants.ends}</span>
-                        <span className="text-white">{endDate.toLocaleDateString()}</span>
+                        <span className="text-white">{formatDate(info.grant_cycle_end_date)}</span>
                     </div>
                 </div>
             )}
