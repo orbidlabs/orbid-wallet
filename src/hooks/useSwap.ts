@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { MiniKit } from '@worldcoin/minikit-js';
-import { encodePacked, encodeAbiParameters } from 'viem';
+import { encodePacked, encodeAbiParameters, getAddress } from 'viem';
 import { SWAP_CONFIG, UNISWAP_ADDRESSES } from '@/lib/uniswap/config';
 import type { Token, SwapQuote, SwapState } from '@/lib/uniswap/types';
 
@@ -65,44 +65,49 @@ export function useSwap({ tokenIn, tokenOut, quote, walletAddress }: UseSwapPara
         try {
             setState(s => ({ ...s, status: 'swapping', quote }));
 
+            const tokenInAddress = getAddress(tokenIn.address);
+            const tokenOutAddress = getAddress(tokenOut.address);
+            const recipientAddress = getAddress(walletAddress);
+            const routerAddress = getAddress(UNISWAP_ADDRESSES.UNIVERSAL_ROUTER);
+
             const amountIn = quote.amountIn.toString();
             const deadline = Math.floor((Date.now() + SWAP_CONFIG.DEFAULT_DEADLINE_MINUTES * 60 * 1000) / 1000);
             const nonce = Date.now().toString();
 
             const { commands, inputs } = encodeSwapForVersion({
-                tokenIn: tokenIn.address,
-                tokenOut: tokenOut.address,
+                tokenIn: tokenInAddress,
+                tokenOut: tokenOutAddress,
                 amountIn: quote.amountIn,
                 amountOutMin: quote.amountOutMin,
-                recipient: walletAddress,
+                recipient: recipientAddress,
                 version: quote.route.version,
                 fee: quote.route.pools[0]?.fee || 3000,
             });
 
             console.log('Executing swap via Universal Router:', {
-                universalRouter: UNISWAP_ADDRESSES.UNIVERSAL_ROUTER,
+                universalRouter: routerAddress,
                 version: quote.route.version,
-                tokenIn: tokenIn.address,
-                tokenOut: tokenOut.address,
+                tokenIn: tokenInAddress,
+                tokenOut: tokenOutAddress,
                 amountIn,
                 commands: commands,
             });
 
             const result = await MiniKit.commandsAsync.sendTransaction({
                 transaction: [{
-                    address: UNISWAP_ADDRESSES.UNIVERSAL_ROUTER as `0x${string}`,
+                    address: routerAddress,
                     abi: UNIVERSAL_ROUTER_ABI,
                     functionName: 'execute',
                     args: [commands, inputs, BigInt(deadline)],
                 }],
                 permit2: [{
                     permitted: {
-                        token: tokenIn.address.toLowerCase() as `0x${string}`,
+                        token: tokenInAddress,
                         amount: amountIn,
                     },
                     nonce,
                     deadline: deadline.toString(),
-                    spender: UNISWAP_ADDRESSES.UNIVERSAL_ROUTER as `0x${string}`,
+                    spender: routerAddress,
                 }],
             });
 
