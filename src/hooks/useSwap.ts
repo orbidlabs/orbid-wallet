@@ -110,13 +110,13 @@ export function useSwap({ tokenIn, tokenOut, quote, walletAddress }: UseSwapPara
                 result = await MiniKit.commandsAsync.sendTransaction({
                     transaction: [
                         {
-                            address: tokenInAddress,
+                            address: tokenInAddress.toLowerCase(),
                             abi: ERC20_ABI,
                             functionName: 'approve',
-                            args: [universalRouter, amountIn], // String no BigInt para el bridge
+                            args: [universalRouter.toLowerCase(), amountIn], // String no BigInt para el bridge
                         },
                         {
-                            address: universalRouter,
+                            address: universalRouter.toLowerCase(),
                             abi: UNIVERSAL_ROUTER_ABI,
                             functionName: 'execute',
                             args: [commands, inputs, deadline], // String no BigInt para el bridge
@@ -130,19 +130,19 @@ export function useSwap({ tokenIn, tokenOut, quote, walletAddress }: UseSwapPara
 
                 result = await MiniKit.commandsAsync.sendTransaction({
                     transaction: [{
-                        address: universalRouter,
+                        address: universalRouter.toLowerCase(),
                         abi: UNIVERSAL_ROUTER_ABI,
                         functionName: 'execute',
                         args: [commands, inputs, deadline], // String no BigInt para el bridge
                     }],
                     permit2: [{
                         permitted: {
-                            token: tokenInAddress,
+                            token: tokenInAddress.toLowerCase(),
                             amount: amountIn, // String ya es compatible con permit2 struct
                         },
                         nonce,
                         deadline: deadline,
-                        spender: universalRouter,
+                        spender: universalRouter.toLowerCase(),
                     }],
                 });
             }
