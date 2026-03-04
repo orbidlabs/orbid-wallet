@@ -38,11 +38,11 @@ const COMMANDS = {
     V3_SWAP_EXACT_OUT: 0x01,
     V2_SWAP_EXACT_IN: 0x08,
     V2_SWAP_EXACT_OUT: 0x09,
-    V4_SWAP: 0x10,
     PERMIT2_PERMIT: 0x0a,
     PERMIT2_TRANSFER_FROM: 0x0b,
     WRAP_ETH: 0x0c,
     UNWRAP_WETH: 0x0d,
+    V4_SWAP: 0x10,
 } as const;
 
 interface UseSwapParams {
@@ -84,7 +84,11 @@ export function useSwap({ tokenIn, tokenOut, quote, walletAddress }: UseSwapPara
             const universalRouter = getAddress(UNISWAP_ADDRESSES.UNIVERSAL_ROUTER);
 
             const amountIn = quote.amountIn.toString();
-            const deadline = Math.floor((Date.now() + SWAP_CONFIG.DEFAULT_DEADLINE_MINUTES * 60 * 1000) / 1000);
+            // Para asegurar la compatibilidad con MiniKit bridge, convertiremos
+            // todos los BigInts a strings al pasarlos en 'args'.
+            const deadline = Math.floor((Date.now() + SWAP_CONFIG.DEFAULT_DEADLINE_MINUTES * 60 * 1000) / 1000).toString();
+
+            const usePermit2 = !tokenIn.isNative;
 
             const { commands, inputs } = encodeSwapForVersion({
                 tokenIn: tokenInAddress,
@@ -94,6 +98,8 @@ export function useSwap({ tokenIn, tokenOut, quote, walletAddress }: UseSwapPara
                 recipient: recipientAddress,
                 version: quote.route.version,
                 fee: quote.route.pools[0]?.fee || 3000,
+                usePermit2,
+                universalRouter
             });
 
             let result;
@@ -107,13 +113,13 @@ export function useSwap({ tokenIn, tokenOut, quote, walletAddress }: UseSwapPara
                             address: tokenInAddress,
                             abi: ERC20_ABI,
                             functionName: 'approve',
-                            args: [universalRouter, BigInt(amountIn)],
+                            args: [universalRouter, amountIn], // String no BigInt para el bridge
                         },
                         {
                             address: universalRouter,
                             abi: UNIVERSAL_ROUTER_ABI,
                             functionName: 'execute',
-                            args: [commands, inputs, BigInt(deadline)],
+                            args: [commands, inputs, deadline], // String no BigInt para el bridge
                         },
                     ],
                 });
@@ -127,15 +133,15 @@ export function useSwap({ tokenIn, tokenOut, quote, walletAddress }: UseSwapPara
                         address: universalRouter,
                         abi: UNIVERSAL_ROUTER_ABI,
                         functionName: 'execute',
-                        args: [commands, inputs, BigInt(deadline)],
+                        args: [commands, inputs, deadline], // String no BigInt para el bridge
                     }],
                     permit2: [{
                         permitted: {
                             token: tokenInAddress,
-                            amount: amountIn,
+                            amount: amountIn, // String ya es compatible con permit2 struct
                         },
                         nonce,
-                        deadline: deadline.toString(),
+                        deadline: deadline,
                         spender: universalRouter,
                     }],
                 });
@@ -177,18 +183,52 @@ function encodeSwapForVersion(params: {
     recipient: string;
     version: 'v2' | 'v3' | 'v4';
     fee: number;
+    usePermit2: boolean;
+    universalRouter: string;
 }): { commands: `0x${string}`; inputs: `0x${string}`[] } {
-    const { version } = params;
+    const { version, usePermit2, universalRouter, tokenIn, amountIn } = params;
 
-    if (version === 'v3') return encodeV3Swap(params);
-    if (version === 'v2') return encodeV2Swap(params);
-    if (version === 'v4') return encodeV4Swap(params);
+    // Si usamos Permit2, el router recibe los fondos primero, por ende no los jala del usuario
+    const payerIsUser = !usePermit2;
 
-    throw new Error(`Unsupported version: ${version}`);
+    let encodedBase: { commands: string; inputs: `0x${string}`[] };
+
+    if (version === 'v3') {
+        encodedBase = encodeV3Swap({ ...params, payerIsUser });
+    } else if (version === 'v2') {
+        encodedBase = encodeV2Swap({ ...params, payerIsUser });
+    } else if (version === 'v4') {
+        encodedBase = encodeV4Swap(params);
+    } else {
+        throw new Error(`Unsupported version: ${version}`);
+    }
+
+    // Intectamos PERMIT2_TRANSFER_FROM si es necesario para mover los fondos antes de ejecutar el swap
+    if (usePermit2) {
+        const permitCommand = COMMANDS.PERMIT2_TRANSFER_FROM.toString(16).padStart(2, '0');
+        const permitInput = encodeAbiParameters(
+            [
+                { type: 'address', name: 'token' },
+                { type: 'address', name: 'recipient' },
+                { type: 'uint160', name: 'amount' },
+            ],
+            [tokenIn as `0x${string}`, universalRouter as `0x${string}`, amountIn]
+        );
+
+        return {
+            commands: `0x${permitCommand}${encodedBase.commands.replace('0x', '')}` as `0x${string}`,
+            inputs: [permitInput, ...encodedBase.inputs]
+        };
+    }
+
+    return {
+        commands: encodedBase.commands as `0x${string}`,
+        inputs: encodedBase.inputs
+    };
 }
 
 function encodeV3Swap({
-    tokenIn, tokenOut, amountIn, amountOutMin, recipient, fee
+    tokenIn, tokenOut, amountIn, amountOutMin, recipient, fee, payerIsUser
 }: {
     tokenIn: string;
     tokenOut: string;
@@ -196,7 +236,8 @@ function encodeV3Swap({
     amountOutMin: bigint;
     recipient: string;
     fee: number;
-}): { commands: `0x${string}`; inputs: `0x${string}`[] } {
+    payerIsUser: boolean;
+}): { commands: string; inputs: `0x${string}`[] } {
     const path = encodePacked(
         ['address', 'uint24', 'address'],
         [tokenIn as `0x${string}`, fee, tokenOut as `0x${string}`]
@@ -210,25 +251,25 @@ function encodeV3Swap({
             { type: 'bytes', name: 'path' },
             { type: 'bool', name: 'payerIsUser' },
         ],
-        [recipient as `0x${string}`, amountIn, amountOutMin, path, true]
+        [recipient as `0x${string}`, amountIn, amountOutMin, path, payerIsUser]
     );
 
     return {
-        commands: `0x${COMMANDS.V3_SWAP_EXACT_IN.toString(16).padStart(2, '0')}` as `0x${string}`,
+        commands: `0x${COMMANDS.V3_SWAP_EXACT_IN.toString(16).padStart(2, '0')}`,
         inputs: [input],
     };
 }
 
 function encodeV2Swap({
-    tokenIn, tokenOut, amountIn, amountOutMin, recipient
+    tokenIn, tokenOut, amountIn, amountOutMin, recipient, payerIsUser
 }: {
     tokenIn: string;
     tokenOut: string;
     amountIn: bigint;
     amountOutMin: bigint;
     recipient: string;
-    fee?: number;
-}): { commands: `0x${string}`; inputs: `0x${string}`[] } {
+    payerIsUser: boolean;
+}): { commands: string; inputs: `0x${string}`[] } {
     const input = encodeAbiParameters(
         [
             { type: 'address', name: 'recipient' },
@@ -242,12 +283,12 @@ function encodeV2Swap({
             amountIn,
             amountOutMin,
             [tokenIn as `0x${string}`, tokenOut as `0x${string}`],
-            true
+            payerIsUser
         ]
     );
 
     return {
-        commands: `0x${COMMANDS.V2_SWAP_EXACT_IN.toString(16).padStart(2, '0')}` as `0x${string}`,
+        commands: `0x${COMMANDS.V2_SWAP_EXACT_IN.toString(16).padStart(2, '0')}`,
         inputs: [input],
     };
 }
@@ -261,7 +302,7 @@ function encodeV4Swap({
     amountOutMin: bigint;
     recipient: string;
     fee: number;
-}): { commands: `0x${string}`; inputs: `0x${string}`[] } {
+}): { commands: string; inputs: `0x${string}`[] } {
     const t0 = tokenIn.toLowerCase() < tokenOut.toLowerCase() ? tokenIn : tokenOut;
     const t1 = tokenIn.toLowerCase() < tokenOut.toLowerCase() ? tokenOut : tokenIn;
     const zeroForOne = tokenIn.toLowerCase() === t0.toLowerCase();
@@ -297,7 +338,7 @@ function encodeV4Swap({
     );
 
     return {
-        commands: `0x${COMMANDS.V4_SWAP.toString(16).padStart(2, '0')}` as `0x${string}`,
+        commands: `0x${COMMANDS.V4_SWAP.toString(16).padStart(2, '0')}`,
         inputs: [input],
     };
 }
